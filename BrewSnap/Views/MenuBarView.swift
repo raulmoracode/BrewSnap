@@ -6,6 +6,8 @@ import SwiftUI
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
 
+    // MARK: - Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {

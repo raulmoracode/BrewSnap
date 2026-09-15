@@ -26,6 +26,8 @@ struct MainView: View {
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
             VStack(spacing: 0) {

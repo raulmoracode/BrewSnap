@@ -4,15 +4,12 @@
 import SwiftUI
 
 struct PackagesView: View {
+    // MARK: - Properties
+
     @Environment(AppState.self) private var appState
     @State private var searchText = ""
-    @State private var selectedFilter: Filter = .all
 
-    enum Filter: String, CaseIterable {
-        case all = "All"
-        case formulae = "Formulae"
-        case casks = "Casks"
-    }
+    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

@@ -9,6 +9,8 @@ struct ProfilesView: View {
     @State private var diffSnapshot: BrewSnapshot?
     @State private var showDiff = false
 
+    // MARK: - Body
+
     var body: some View {
         @Bindable var state = appState
         VStack(alignment: .leading, spacing: 16) {

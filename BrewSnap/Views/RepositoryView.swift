@@ -4,6 +4,8 @@
 import SwiftUI
 
 struct RepositoryView: View {
+    // MARK: - Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             VStack(alignment: .leading, spacing: 6) {
@@ -53,6 +55,8 @@ private struct RepoCard: View {
     let url: String
     let icon: String
     let color: Color
+
+    // MARK: - Private Views
 
     private var resolvedURL: URL? {
         URL(string: url)

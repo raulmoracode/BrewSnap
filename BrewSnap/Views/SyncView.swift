@@ -10,6 +10,8 @@ struct SyncView: View {
     @State private var message: String?
     @State private var isError = false
 
+    // MARK: - Body
+
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Sync con GitHub").font(.title2.bold())
@@ -81,6 +83,8 @@ struct SyncView: View {
         case .error: StatusBadge(status: .error)
         }
     }
+
+    // MARK: - Private Methods
 
     private func doSync() async {
         guard let snapshot = appState.snapshot else { return }

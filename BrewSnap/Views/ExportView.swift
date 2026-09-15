@@ -20,7 +20,7 @@ struct ExportView: View {
             VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Export").font(.title2.bold())
-                Text("Guarda tu entorno Homebrew en un JSON y elige dónde conservarlo — descarga en tu Mac o sincronizado en un repositorio privado.")
+                Text("Guarda tu entorno Homebrew en un JSON y elige dónde conservarlo.")
                     .font(.callout).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

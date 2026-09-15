@@ -18,12 +18,14 @@ struct ImportView: View {
     @State private var gitHubMessage: String?
     @State private var gitHubIsError = false
 
+    // MARK: - Body
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Import").font(.title2.bold())
-                    Text("Añade un JSON de BrewSnap para previsualizarlo o restaurarlo — local o desde tu repo privado")
+                    Text("Añade un JSON de BrewSnap para previsualizarlo o restaurarlo.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
@@ -201,6 +203,8 @@ struct ImportView: View {
             .padding(20)
         }
     }
+
+    // MARK: - Private Methods
 
     private func selectFile() {
         let panel = NSOpenPanel()

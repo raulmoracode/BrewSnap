@@ -11,6 +11,8 @@ struct SettingsView: View {
     @State private var validationMessage: String?
     @State private var isValidating = false
 
+    // MARK: - Body
+
     var body: some View {
         Form {
             Section("GitHub") {
@@ -70,6 +72,8 @@ struct SettingsView: View {
         }
         .scrollContentBackground(.hidden)
     }
+
+    // MARK: - Private Methods
 
     private func save() {
         if !tokenInput.isEmpty { try? KeychainService.save(token: tokenInput) }
