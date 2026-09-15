@@ -10,7 +10,7 @@ struct MenuBarView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "shippingbox.fill").foregroundStyle(Color(hex: "#FBB040"))
                 Text("BrewSnap").font(.headline)
@@ -78,20 +78,6 @@ struct MenuBarView: View {
         }
         .padding(12)
         .frame(width: 220)
-        .onAppear {
-            // Center the dropdown window (was left-aligned to the icon)
-            DispatchQueue.main.async {
-                // MenuBarExtra window is a NSPanel with isFloatingPanel
-                let candidates = NSApp.windows.filter { $0.isVisible && String(describing: type(of: $0)).contains("Panel") }
-                let target = candidates.first ?? NSApp.keyWindow ?? NSApp.mainWindow
-                guard let window = target, let screen = window.screen ?? NSScreen.main else { return }
-                var frame = window.frame
-                // Center horizontally on screen, just below menu bar (not left of icon)
-                frame.origin.x = screen.visibleFrame.midX - frame.width / 2
-                frame.origin.y = screen.visibleFrame.maxY - frame.height - 8
-                window.setFrame(frame, display: true, animate: false)
-            }
-        }
     }
 
     private func enlargeAndZoom(window: NSWindow) {
