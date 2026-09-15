@@ -1,0 +1,83 @@
+import Foundation
+
+enum ShellError: LocalizedError, Sendable {
+    case launchFailed(String)
+    case nonZeroExit(command: String, exitCode: Int32, stderr: String)
+    case outputDecodingFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .launchFailed(let msg): return "Failed to launch process: \(msg)"
+        case .nonZeroExit(let cmd, let code, let stderr): return "`\(cmd)` exited with \(code): \(stderr)"
+        case .outputDecodingFailed: return "Failed to decode process output"
+        }
+    }
+}
+
+struct ShellResult: Sendable {
+    let stdout: String
+    let stderr: String
+    let exitCode: Int32
+    var isSuccess: Bool { exitCode == 0 }
+}
+
+/// Lightweight wrapper around Foundation.Process for running brew/git commands.
+enum ShellExecutor {
+    @discardableResult
+    static func run(
+        _ executable: String,
+        args: [String] = [],
+        environment: [String: String]? = nil,
+        workingDirectory: URL? = nil
+    ) async throws -> ShellResult {
+        try await withCheckedThrowingContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: executable)
+                process.arguments = args
+                if let env = environment {
+                    process.environment = env
+                }
+                if let wd = workingDirectory {
+                    process.currentDirectoryURL = wd
+                }
+
+                let outPipe = Pipe()
+                let errPipe = Pipe()
+                process.standardOutput = outPipe
+                process.standardError = errPipe
+
+                do {
+                    try process.run()
+                } catch {
+                    continuation.resume(throwing: ShellError.launchFailed(error.localizedDescription))
+                    return
+                }
+                process.waitUntilExit()
+
+                let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
+                let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
+                let stdout = String(data: outData, encoding: .utf8) ?? ""
+                let stderr = String(data: errData, encoding: .utf8) ?? ""
+                let result = ShellResult(stdout: stdout, stderr: stderr, exitCode: process.terminationStatus)
+                continuation.resume(returning: result)
+            }
+        }
+    }
+
+    /// Convenience: run via /bin/zsh -c "command" (respects PATH, brew shims)
+    @discardableResult
+    static func runShell(_ command: String, workingDirectory: URL? = nil) async throws -> ShellResult {
+        try await run("/bin/zsh", args: ["-l", "-c", command], workingDirectory: workingDirectory)
+    }
+
+    /// Run and throw if exitCode != 0
+    @discardableResult
+    static func runOrThrow(_ executable: String, args: [String] = [], workingDirectory: URL? = nil) async throws -> String {
+        let result = try await run(executable, args: args, workingDirectory: workingDirectory)
+        guard result.isSuccess else {
+            throw ShellError.nonZeroExit(command: ([executable] + args).joined(separator: " "), exitCode: result.exitCode, stderr: result.stderr)
+        }
+        return result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
