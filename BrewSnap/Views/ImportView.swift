@@ -1,5 +1,5 @@
 // ImportView.swift
-// BrewSnap — Zona para importar JSON (drag & drop).
+// BrewSnap — Zone for importing JSON (drag & drop).
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -25,7 +25,7 @@ struct ImportView: View {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Import").font(.title2.bold())
-                    Text("Añade un JSON de BrewSnap para previsualizarlo o restaurarlo.")
+                    Text("Add a BrewSnap JSON to preview or restore.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
@@ -43,14 +43,14 @@ struct ImportView: View {
                     Image(systemName: "doc.badge.plus")
                         .font(.system(size: 36))
                         .foregroundStyle(isTargeted ? Color.accentColor : Color.secondary)
-                    Text("Arrastra tu JSON aquí")
+                    Text("Drag your JSON here")
                         .font(.headline)
-                    Text("o haz clic para seleccionar")
+                    Text("or click to select")
                         .font(.subheadline).foregroundStyle(.secondary)
                     Button {
                         selectFile()
                     } label: {
-                        Label("Seleccionar archivo", systemImage: "folder.badge.plus")
+                        Label("Select file", systemImage: "folder.badge.plus")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#FBB040"))
@@ -78,12 +78,12 @@ struct ImportView: View {
             // GitHub import — descarga desde repo privado (inverso a Export → Subir)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Label("Desde repo privado de GitHub", systemImage: "arrow.down.circle.fill")
+                    Label("From private GitHub repo", systemImage: "arrow.down.circle.fill")
                         .font(.headline)
                     Spacer()
                     if isFetchingGitHub { ProgressView().scaleEffect(0.7) }
                 }
-                Text("Descarga el JSON directamente de tu repo privado, igual que lo subes en Export")
+                Text("Download the JSON directly from your private repo, just like you upload it from Export")
                     .font(.caption).foregroundStyle(.secondary)
                 HStack(spacing: 8) {
                     TextField("owner", text: $gitHubOwner).textFieldStyle(.roundedBorder).frame(width: 130)
@@ -93,14 +93,14 @@ struct ImportView: View {
                     Button {
                         Task { await fetchFromGitHub() }
                     } label: {
-                        Label(isFetchingGitHub ? "Descargando…" : "Descargar", systemImage: "arrow.down.doc.fill")
+                        Label(isFetchingGitHub ? "Downloading…" : "Descargar", systemImage: "arrow.down.doc.fill")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#1D3557"))
                     .disabled(gitHubOwner.isEmpty || gitHubRepo.isEmpty || isFetchingGitHub || appState.githubToken.isEmpty)
                 }
                 if appState.githubToken.isEmpty {
-                    Text("Configura tu token en Settings").font(.caption2).foregroundStyle(.orange)
+                    Text("Configure your token in Settings").font(.caption2).foregroundStyle(.orange)
                 }
                 if let msg = gitHubMessage {
                     Label(msg, systemImage: gitHubIsError ? "xmark.circle.fill" : "checkmark.circle.fill")
@@ -116,7 +116,7 @@ struct ImportView: View {
                             .tint(gitHubProfile == profile.name ? Color.accentColor : .secondary)
                     }
                     Spacer()
-                    Button("Usar repo de Settings") {
+                    Button("Use repo from Settings") {
                         gitHubOwner = appState.repoOwner
                         gitHubRepo = appState.repoName
                     }.controlSize(.small)
@@ -174,18 +174,18 @@ struct ImportView: View {
                         Button {
                             appState.snapshot = snap
                             appState.lastError = nil
-                        } label: { Label("Usar como snapshot actual", systemImage: "checkmark.circle.fill") }
+                        } label: { Label("Use as current snapshot", systemImage: "checkmark.circle.fill") }
                         .buttonStyle(.borderedProminent).tint(.green)
-                        Button("Copiar JSON") {
+                        Button("Copy JSON") {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(jsonText, forType: .string)
                         }.buttonStyle(.bordered)
-                        Button("Limpiar", role: .destructive) { clear() }
+                        Button("Clear", role: .destructive) { clear() }
                             .buttonStyle(.bordered)
                         Spacer()
                     }
 
-                    DisclosureGroup("Ver JSON") {
+                    DisclosureGroup("View JSON") {
                         ScrollView {
                             Text(jsonText).font(.system(.caption, design: .monospaced))
                                 .textSelection(.enabled)
@@ -232,14 +232,14 @@ struct ImportView: View {
         } catch {
             importedSnapshot = nil
             jsonText = ""
-            errorMessage = "JSON inválido: \(error.localizedDescription)"
+            errorMessage = "Invalid JSON: \(error.localizedDescription)"
         }
     }
 
     private func fetchFromGitHub() async {
         let token = appState.githubToken
         guard !token.isEmpty else {
-            gitHubMessage = "Configura tu token en Settings"
+            gitHubMessage = "Configure your token in Settings"
             gitHubIsError = true
             return
         }
@@ -247,7 +247,7 @@ struct ImportView: View {
         let repo = gitHubRepo.trimmingCharacters(in: .whitespaces)
         let profile = gitHubProfile.trimmingCharacters(in: .whitespaces).isEmpty ? "brewsnap" : gitHubProfile.trimmingCharacters(in: .whitespaces)
         guard !owner.isEmpty, !repo.isEmpty else {
-            gitHubMessage = "Owner y repo requeridos"
+            gitHubMessage = "Owner and repo required"
             gitHubIsError = true
             return
         }

@@ -1,5 +1,5 @@
 // AppState.swift
-// BrewSnap — Estado global observable (snapshot, perfiles, settings).
+// BrewSnap — Global observable state (snapshot, profiles, settings).
 
 import Foundation
 import Observation
@@ -78,10 +78,10 @@ final class AppState {
             snapshot = snap
             lastError = nil
             if snap.formulae.isEmpty && snap.casks.isEmpty {
-                lastError = "Snapshot vacío — verifica que brew funciona (brew list --formula --versions)"
+                lastError = "Empty snapshot — check that brew works (brew list --formula --versions)"
             }
         } catch is CancellationError {
-            lastError = "Timeout escaneando Homebrew (>30s) — reintenta"
+            lastError = "Timeout scanning Homebrew (>30s) — try again"
         } catch {
             lastError = error.localizedDescription
         }

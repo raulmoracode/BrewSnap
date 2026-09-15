@@ -1,5 +1,5 @@
 // JSONEncoder+Pretty.swift
-// BrewSnap — Encoder JSON legible para snapshots.
+// BrewSnap — Pretty JSON encoder for snapshots.
 
 import Foundation
 

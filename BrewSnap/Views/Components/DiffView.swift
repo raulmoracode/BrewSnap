@@ -1,5 +1,5 @@
 // DiffView.swift
-// BrewSnap — Vista diff entre snapshots.
+// BrewSnap — Diff view between snapshots.
 
 import SwiftUI
 
@@ -12,7 +12,7 @@ struct DiffView: View {
         } else {
             List {
                 if !diff.addedFormulae.isEmpty {
-                    Section("Añadidos (\(diff.addedFormulae.count))") {
+                    Section("Added (\(diff.addedFormulae.count))") {
                         ForEach(diff.addedFormulae, id: \.name) { f in
                             HStack {
                                 Label(f.name, systemImage: "plus.circle.fill").foregroundStyle(.green)
@@ -43,14 +43,14 @@ struct DiffView: View {
                     }
                 }
                 if !diff.addedCasks.isEmpty {
-                    Section("Casks añadidos") {
+                    Section("Added casks") {
                         ForEach(diff.addedCasks, id: \.name) { c in
                             Label(c.name, systemImage: "plus.circle.fill").foregroundStyle(.green)
                         }
                     }
                 }
                 if !diff.addedTaps.isEmpty {
-                    Section("Taps añadidos") {
+                    Section("Added taps") {
                         ForEach(diff.addedTaps, id: \.name) { t in
                             Label(t.name, systemImage: "plus.circle.fill").foregroundStyle(.green)
                         }

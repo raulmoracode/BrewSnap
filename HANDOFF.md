@@ -1,48 +1,48 @@
-# BrewSnap — Handoff de Iteraciones
+# BrewSnap — Iteration Handoff
 
-> Documento vivo donde se registra cada iteración del desarrollo. Cada entrada incluye: fecha, objetivo, cambios realizados, decisiones, estado del build y próximos pasos. Sirve como memoria del proyecto y punto de entrada para retomar trabajo en cualquier momento.
-
----
-
-## Cómo usar este documento
-
-- **Una iteración = un bloque `## Iteración N`** con fecha, rama y resumen.
-- Mantener orden cronológico descendente (la última iteración arriba).
-- Marcar estado: `🟢 Completada` / `🟡 En curso` / `🔴 Bloqueada`.
-- Referenciar archivos clave con `ruta:línea` cuando sea relevante.
-- Al cerrar una iteración, actualizar también la tabla de resumen.
+> Living document where each iteration del desarrollo. Each entry includes: date, goal, changes made, decisions, build status and next steps. Serves as project memory and entry point to resume work at any time.
 
 ---
 
-## Resumen de iteraciones
+## How to Use This Document
 
-| # | Fecha | Objetivo | Estado | Branch | Commit / Tag |
+- **One iteration = a `## Iteration N` block** with date, branch and summary.
+- Keep reverse chronological order (latest iteration on top).
+- Mark status: `🟢 Completed` / `🟡 In Progress` / `🔴 Blocked`.
+- Reference key files with `path:line` when relevant.
+- When closing an iteration, also update the summary table.
+
+---
+
+## Iteration Summary
+
+| # | Date | Goal | Status | Branch | Commit / Tag |
 |---|-------|----------|--------|--------|--------------|
-| 0 | 2026-09-15 | Bootstrap + MVP compilable (Fase 1: Snapshot, GitHub, Sync, Perfiles) | 🟢 Completada | `main` | 75a4768 |
-| 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completada | `main` | 0f52476 |
-| 0.2 | 2026-09-15 | Fix escaneo infinito + Packages (All/Formulae/Casks) | 🟢 Completada | `main` | fc199af |
-| 0.3 | 2026-09-15 | Sidebar: Repository + Settings como tabs (no arriba derecha) | 🟢 Completada | `main` | — |
-| 1 | — | Import en nueva máquina + Diff + dry-run | 🔜 Pendiente | — | — |
-| 2 | — | Menu bar + Historial + Auto-snapshot | 🔜 Pendiente | — | — |
+| 0 | 2026-09-15 | Bootstrap + MVP buildable (Phase 1: Snapshot, GitHub, Sync, Profiles) | 🟢 Completed | `main` | 75a4768 |
+| 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completed | `main` | 0f52476 |
+| 0.2 | 2026-09-15 | Fix infinite scan + Packages (All/Formulae/Casks) | 🟢 Completed | `main` | fc199af |
+| 0.3 | 2026-09-15 | Sidebar: Repository + Settings as tabs (not top right) | 🟢 Completed | `main` | — |
+| 1 | — | Import on new machine + Diff + dry-run | 🔜 Pendiente | — | — |
+| 2 | — | Menu bar + History + Auto-snapshot | 🔜 Pendiente | — | — |
 
 ---
 
-## Iteración 0.3 — Sidebar: Repository + Settings como tabs
+## Iteration 0.3 — Sidebar: Repository + Settings como tabs
 
-**Fecha:** 2026-09-15  
-**Estado:** 🟢 Completada  
+**Date:** 2026-09-15  
+**Status:** 🟢 Completed  
 **Branch:** `main`  
-**Petición:** Añadir debajo de Profiles: `Repository` (enlace público al repo, para cualquier persona) y `Settings` (configurar GitHub token, que no esté arriba a la derecha)  
-**Objetivo:** Sidebar 6 ítems: Export, Packages, Sync, Profiles, Repository, Settings — con Sections
+**Request:** Add below Profiles: `Repository` (enlace público al repo, para cualquier persona) y `Settings` (configurar GitHub token, que no esté arriba a la derecha)  
+**Goal:** Sidebar 6 items: Export, Packages, Sync, Profiles, Repository, Settings — with Sections
 
-### Cambios realizados
+### Changes Made
 
 - [x] Nuevo `BrewSnap/Views/RepositoryView.swift:1-110` — Card para `raulmoracode/brewsnap` (app/releases/docs) y `raulmoracode/homebrew-tap` (`brew install raulmoracode/tap/brewsnap`), bloque `Instalación rápida` con comando copiable `brew install …` + `Copiar` + `Ver releases`, GroupBox Info (Bundle ID, MIT, requisitos) + Links `Reportar issue` / `Discussions`. Colores marca `#FBB040` / `#1D3557`.
 - [x] `BrewSnap/Views/SettingsView.swift:56-62` — quitar `.frame(width:520,height:420)` fijo; ahora `scrollContentBackground(.hidden)` y flexible para uso como tab; `BrewSnap/App/BrewSnapApp.swift:34-37` mantiene `Settings { SettingsView().frame(520x420) }` para ventana `Cmd+,` (Settings scene) sin recortar.
-- [x] `BrewSnap/Views/MainView.swift:7-45` — `enum Tab: CaseIterable` añade `repository = "Repository"` (`link`) y `settings = "Settings"` (`gearshape.fill`), orden `export → packages → sync → profiles → repository → settings`. `List` ahora con `Section("Principal")` (4) y `Section("Proyecto")` (2). Toolbar `Button showSettingsWindow` eliminado (Settings ya no está arriba a la derecha). `switch` integra `RepositoryView()` y `SettingsView()`. `navigationSplitViewColumnWidth` 180→200 para nuevo contenido. Auto-inclusión por `PBXFileSystemSynchronizedRootGroup` no requiere tocar `project.pbxproj`.
+- [x] `BrewSnap/Views/MainView.swift:7-45` — `enum Tab: CaseIterable` añade `repository = "Repository"` (`link`) y `settings = "Settings"` (`gearshape.fill`), orden `export → packages → sync → profiles → repository → settings`. `List` ahora with `Section("Main")` (4) y `Section("Proyecto")` (2). Toolbar `Button showSettingsWindow` eliminado (Settings ya no está arriba a la derecha). `switch` integra `RepositoryView()` y `SettingsView()`. `navigationSplitViewColumnWidth` 180→200 para nuevo contenido. Auto-inclusión por `PBXFileSystemSynchronizedRootGroup` no requiere tocar `project.pbxproj`.
 - [x] Verificación: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build` → **BUILD SUCCEEDED**.
 
-### Cómo probar
+### How to Test
 
 ```bash
 cd ~/projects/brewsnap
@@ -53,15 +53,15 @@ Sidebar: debajo de Profiles verás **Repository** (abre `https://github.com/raul
 
 ---
 
-## Iteración 0.2 — Fix escaneo infinito + Packages (All / Formulae / Casks)
+## Iteration 0.2 — Fix escaneo infinito + Packages (All / Formulae / Casks)
 
-**Fecha:** 2026-09-15  
-**Estado:** 🟢 Completada  
+**Date:** 2026-09-15  
+**Status:** 🟢 Completed  
 **Branch:** `main`  
-**Reportado:** "se queda en escaneando todo el rato" + petición nueva pestaña Packages con columnas All / Casks / Formulae  
-**Causa raíz escaneo:** `HomebrewService.scan()` en `BrewSnap/Services/BrewService.swift:18-61` lanzaba `async let` para 6 tareas brew en paralelo. `brew` usa lock file y no soporta múltiples procesos concurrentes → deadlock → `isScanning` nunca a `false` (ver `BrewSnap/App/AppState.swift:35-44`). Además `fetchTaps` hacía `brew tap-info --json` por cada tap (5× ~0.6s) y `fetchPinned` usaba `brew pin` (comando erróneo, debería ser `brew list --pinned`) → sumaba latencia.
+**Reported:** "se queda en escaneando todo el rato" + petición nueva pestaña Packages con columnas All / Casks / Formulae  
+**Root cause escaneo:** `HomebrewService.scan()` en `BrewSnap/Services/BrewService.swift:18-61` lanzaba `async let` para 6 tareas brew en paralelo. `brew` usa lock file y no soporta múltiples procesos concurrentes → deadlock → `isScanning` nunca a `false` (ver `BrewSnap/App/AppState.swift:35-44`). Además `fetchTaps` hacía `brew tap-info --json` por cada tap (5× ~0.6s) y `fetchPinned` usaba `brew pin` (comando erróneo, debería ser `brew list --pinned`) → sumaba latencia.
 
-### Cambios realizados
+### Changes Made
 
 - [x] `BrewSnap/Services/BrewService.swift:20-60` — `scan()` ahora secuencial (no `async let`) con helper `withTimeout<T: Sendable>(label:seconds:work:fallback:)` (12s formulae/casks, 15s taps, 8s services, 5s pinned/diskUsage) que cancela con `withThrowingTaskGroup` + `Task.sleep`. Log `[BrewSnap] scan start/done` y tiempos por fase en Console.app. Evita deadlock y garantiza que `AppState.isScanning` vuelva a `false`.
 - [x] `BrewSnap/Services/BrewService.swift:133-147` — `fetchTaps` fast path: solo `brew tap` → `map { BrewTap(name:$0, remote:nil) }`, sin per-tap `tap-info` (ahorra 2-4s). `fetchPinned:158` fix `brew list --pinned` (antes `brew pin` daba `Usage: brew pin …` exit 1).
@@ -75,7 +75,7 @@ Sidebar: debajo de Profiles verás **Repository** (abre `https://github.com/raul
 - [x] Auto-inclusión por `PBXFileSystemSynchronizedRootGroup` (`BrewSnap.xcodeproj/project.pbxproj:14` path=BrewSnap) — no requiere editar pbxproj al añadir `PackagesView.swift`.
 - [x] Verificación: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build` → **BUILD SUCCEEDED**; test secuencial `brew list --formula --versions` (0.3s), `--cask` (0.2s), `tap` (0.2s), `services list --json` (0.33s), `list --pinned` (0.1s), `du` (0.13s) → total ~1.5s (antes paralelo se colgaba).
 
-### Cómo probar
+### How to Test
 
 ```bash
 rm -rf ~/Library/Developer/Xcode/DerivedData/BrewSnap-*
@@ -87,18 +87,18 @@ open BrewSnap.xcodeproj  # Cmd+R
 
 ---
 
-## Iteración 0.1 — Hotfix snapshot en 0 (brew path + sandbox)
+## Iteration 0.1 — Hotfix snapshot en 0 (brew path + sandbox)
 
-**Fecha:** 2026-09-15  
-**Estado:** 🟢 Completada  
+**Date:** 2026-09-15  
+**Status:** 🟢 Completed  
 **Branch:** `main`  
-**Reportado:** Usuario: "no me salen los Formulae, los casks ni los Taps que tengo me salen todos en 0"  
-**Causa raíz:** 2 fallos combinados en `BrewSnap/Services/BrewService.swift:15-134` y `BrewSnap.xcodeproj/project.pbxproj:244`
+**Reported:** Usuario: "no me salen los Formulae, los casks ni los Taps que tengo me salen todos en 0"  
+**Root cause:** 2 fallos combinados en `BrewSnap/Services/BrewService.swift:15-134` y `BrewSnap.xcodeproj/project.pbxproj:244`
 
 1. **PATH dependiente del sandbox** — `ShellExecutor.runShell("brew ...")` usaba `brew` sin ruta absoluta, dependía de `PATH` vía `zsh -l`. Con `ENABLE_APP_SANDBOX=YES` (heredado del template Xcode) el sandbox bloqueaba `Process` y `PATH` no incluía `/opt/homebrew/bin`, así que todos los `brew list` fallaban silenciosamente (en `HomebrewService.scan()` se hacía `(try? task) ?? []`, sin error visible) → 0 resultados.
 2. **Falta de ruta absoluta** — No había fallback a `/opt/homebrew/bin/brew` (tu brew real `brew --version 7.0.2` en `/opt/homebrew/bin/brew`, verificado con `ls -l /opt/homebrew/bin/brew` y `brew list --formula --versions | wc -l` → 60 formulae reales).
 
-### Cambios realizados
+### Changes Made
 
 - [x] `BrewSnap/Utilities/ShellExecutor.swift:26-42` — añadido `brewExecutable()` que resuelve `/opt/homebrew/bin/brew` / `/usr/local/bin/brew` vía `FileManager.isExecutableFile(atPath:)`; deja de depender del PATH.
 - [x] `BrewSnap/Utilities/VersionHelper.swift:55-66` — `systemInfo()` ahora usa `ShellExecutor.brewExecutable()` + `run(brew, ["--version"])` en lugar de `runShell("brew --version")`.
@@ -107,7 +107,7 @@ open BrewSnap.xcodeproj  # Cmd+R
 - [x] `BrewSnap/Views/ExportView.swift:40-63` — añadido warning naranja cuando `snap.formulae.isEmpty && casks.isEmpty` mostrando `ShellExecutor.brewExecutable()` + existencia + hint `brew list --formula --versions | wc -l`.
 - [x] Verificación: `xcodebuild ...` → **BUILD SUCCEEDED**; test directo `/opt/homebrew/bin/brew list --formula --versions` → 60 formulae, `--cask` → 31, `brew tap` → 5 taps, `du -sh /opt/homebrew/Cellar` → 1.1G (ver `TestSnapshot.swift` en /tmp).
 
-### Cómo probar el fix
+### How to Test el fix
 
 ```bash
 # 1. Clean build (importante tras cambiar sandbox)
@@ -119,21 +119,21 @@ open BrewSnap.xcodeproj  # Cmd+Shift+K (Clean) → Cmd+R
 ```
 En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks · 5 taps` (no 0). Si sigue en 0, mira `Console.app` → filtro `BrewSnap` → verás `[BrewSnap] fetchFormulae stderr: ...`.
 
-### Decisión técnica
+### Technical Decision
 
-| Decisión | Alternativa | Motivo |
+| Decision | Alternative | Reason |
 |----------|-------------|--------|
 | `brewExecutable()` con candidatos absolutos | Seguir con `zsh -l -c "brew"` | Sandbox no carga login shell, PATH vacío; binario absoluto es determinista |
 | `ENABLE_APP_SANDBOX = NO` | Mantener YES + entitlements `allow-unsigned-executable-memory` | Fase MVP necesita `Process` sin restricciones; sandbox se puede re-activar en Fase 3 con entitlements finos |
 
 ---
 
-## Iteración 0 — Bootstrap + MVP compilable (Fase 1)
+## Iteration 0 — Bootstrap + MVP compilable (Fase 1)
 
-**Fecha:** 2026-09-15  
-**Estado:** 🟢 Completada  
+**Date:** 2026-09-15  
+**Status:** 🟢 Completed  
 **Branch:** `main`  
-**Objetivo:** Crear el handoff, inicializar el proyecto Xcode (Swift 6 / SwiftUI / macOS 15+) y dejar un MVP compilable de Fase 1 según `README.md:26-177`.
+**Goal:** Crear el handoff, inicializar el proyecto Xcode (Swift 6 / SwiftUI / macOS 15+) y dejar un MVP compilable de Fase 1 según `README.md:26-177`.
 
 ### Contexto
 
@@ -143,7 +143,7 @@ En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks 
 - Features Fase 1 en `README.md:133-177`: Snapshot, GitHub Integration, Sync, Perfiles.
 - Restricción 2 repos en `README.md:330-352`.
 
-### Cambios realizados
+### Changes Made
 
 - [x] Creado `HANDOFF.md` (este archivo) como registro de iteraciones (`HANDOFF.md:1-105`).
 - [x] Scaffold Xcode: `BrewSnap.xcodeproj/project.pbxproj:1-334` con `PBXFileSystemSynchronizedRootGroup` (Xcode 16+), target `BrewSnap`, bundle `com.raulmorasanchez.BrewSnap` (`README.md:315`), deployment target macOS 15.0, Swift 6, `SWIFT_STRICT_CONCURRENCY=complete`.
@@ -158,7 +158,7 @@ En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks 
 - [x] Fix `UniformTypeIdentifiers` import para `.json` en `Views/ExportView.swift:95`.
 - [x] Verificación: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build` → **BUILD SUCCEEDED** (2026-09-15).
 
-### Decisiones técnicas
+### Technical Decisions
 
 | Decisión | Alternativa descartada | Motivo |
 |----------|------------------------|--------|
@@ -169,58 +169,58 @@ En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks 
 | `UniformTypeIdentifiers` para `.json` | `kUTTypeJSON` legacy | Swift 6 member import visibility |
 | Bundle `com.raulmorasanchez.BrewSnap` + `com.apple.product-type.application` macOS only | Multiplatform target | README pide macOS 15+ nativo, simplifica entitlements/sandbox |
 
-### Verificación
+### Verification
 
 - Comando: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build`
 - Resultado: **BUILD SUCCEEDED** (único warning: `appintentsmetadataprocessor` sin AppIntents, inocuo)
 - Artefacto: `DerivedData/BrewSnap-.../Build/Products/Debug/BrewSnap.app`
-- Pendiente manual: `open BrewSnap.xcodeproj` → Cmd+R → probar Create Snapshot con brew real y validar token.
+- Manual pending: `open BrewSnap.xcodeproj` → Cmd+R → probar Create Snapshot con brew real y validar token.
 
-### Pendientes / Riesgos
+### Pending / Risks
 
 - [ ] Validar que `brew` esté en PATH dentro de app sandboxed (`ENABLE_APP_SANDBOX=YES` puede bloquear `Process`). Si falla, desactivar sandbox o añadir entitlement `com.apple.security.cs.allow-unsigned-executable-memory`.
 - [ ] `brew services list --json` output varía según versión — testear parse real.
 - [ ] Sync actual usa `PUT /contents` directo (no git clone/pull en `/tmp` como describe `README.md:170`). Para Fase 1 es suficiente, pero para historial/timeline habrá que migrar a clone local.
 - [ ] Añadir `.gitignore` para `DerivedData/`, `*.xcuserstate`.
 
-### Próximos pasos
+### Next Steps
 
 1. **Iteración 1 — Import & Diff (Fase 2)**: `Import from repo` (descarga JSON, checklist, taps→formulae→casks→services, barra progreso), `Diff entre máquinas` vista completa, dry-run.
-2. **Iteración 2 — Menu bar + Historial + Auto-snapshot (Fase 3 parcial)**: MenuBarExtra pulido, `GET /commits` timeline, watcher `brew` background.
+2. **Iteración 2 — Menu bar + History + Auto-snapshot (Fase 3 parcial)**: MenuBarExtra pulido, `GET /commits` timeline, watcher `brew` background.
 3. **Iteración 3 — Distribución**: Workflow GitHub Actions para DMG + update `homebrew-tap` (`README.md:346-352`).
 
 ---
 
-## Plantilla para nuevas iteraciones
+## Template for New Iterations
 
 ```markdown
-## Iteración N — Título corto
+## Iteration N — Título corto
 
-**Fecha:** YYYY-MM-DD
-**Estado:** 🟢 Completada | 🟡 En curso | 🔴 Bloqueada
-**Branch:** `nombre-rama`
-**Objetivo:** Una frase clara.
+**Date:** YYYY-MM-DD
+**Status:** 🟢 Completed | 🟡 In Progress | 🔴 Blocked
+**Branch:** `branch-name`
+**Goal:** Una frase clara.
 
-### Cambios realizados
+### Changes Made
 - [ ] Item 1 (`ruta/archivo:línea`)
 - [ ] Item 2
 
-### Decisiones técnicas
-| Decisión | Alternativa | Motivo |
+### Technical Decisions
+| Decision | Alternative | Reason |
 |----------|-------------|--------|
 
-### Verificación
-- Comando: `xcodebuild ...`
-- Resultado: OK / FAIL (log relevante)
+### Verification
+- Command: `xcodebuild ...`
+- Result: OK / FAIL (relevant log)
 
-### Próximos pasos
+### Next Steps
 - ...
 ```
 
 ---
 
-## Notas y convenciones
+## Notes and Conventions
 
-- Bundle ID canónico: `com.raulmorasanchez.BrewSnap` (`README.md:315`).
-- Colores de marca: `#FBB040` (naranja brew) + `#1D3557` (azul) (`README.md:314`).
-- Commits de sync: `snapshot: 67 formulae, 23 casks — YYYY-MM-DD` (`README.md:243`).
+- Canonical Bundle ID: `com.raulmorasanchez.BrewSnap` (`README.md:315`).
+- Brand colors: `#FBB040` (naranja brew) + `#1D3557` (azul) (`README.md:314`).
+- Sync commits: `snapshot: 67 formulae, 23 casks — YYYY-MM-DD` (`README.md:243`).

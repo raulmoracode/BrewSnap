@@ -1,76 +1,84 @@
 # BrewSnap
 
-**Tu entorno Homebrew, sincronizado y protegido.**
+**Your Homebrew environment, synced and protected.**
 
-App nativa macOS (SwiftUI) que exporta el estado de Homebrew a JSON y lo sincroniza automáticamente con un repositorio privado en GitHub.
-
----
-
-## Problema
-
-Cuando cambias de Mac o reinstalas macOS, pierdes todo tu entorno Homebrew:
-- No sabes qué paquetes tenías instalados
-- `brew bundle` genera un Brewfile (Ruby DSL) que no es legible ni diffable
-- No recuerdas las versiones exactas que tenías
-- No existe una forma cómoda de gestionar backups sin tocar la terminal
-
-## Solución
-
-BrewSnap es una app nativa macOS que:
-1. Escanea tu entorno Homebrew (formulae, casks, taps, servicios)
-2. Genera un JSON limpio y versionado
-3. Lo sincroniza con un repositorio privado en GitHub — un clic, sin comandos git
+Native macOS app (SwiftUI) that exports your Homebrew state to JSON and automatically syncs it to a private GitHub repository.
 
 ---
 
-## Arquitectura
+## Problem
+
+When you switch Macs or reinstall macOS, you lose your entire Homebrew environment:
+- You don't know which packages you had installed
+- `brew bundle` generates a Brewfile (Ruby DSL) that is not readable or diffable
+- You don't remember the exact versions you had
+- There's no convenient way to manage backups without touching the terminal
+
+## Solution
+
+BrewSnap is a native macOS app that:
+1. Scans your Homebrew environment (formulae, casks, taps, services)
+2. Generates a clean, versioned JSON
+3. Syncs it to a private GitHub repository — one click, no git commands
+
+---
+
+## Architecture
 
 ### Stack
 - **Swift 6** / **SwiftUI** / **macOS 15+ (Sequoia)**
-- **GitHub API v3** (octokit.swift o URLSession directa) para crear repos y push
-- **Keychain** para almacenar el token GitHub de forma segura
-- **Process** para ejecutar comandos `brew` internamente
-- **Combine** / **@Observable** para data flow
+- **GitHub API v3** (octokit.swift or direct URLSession) to create repos and push
+- **Keychain** to securely store the GitHub token
+- **Process** to run `brew` commands internally
+- **Combine** / **@Observable** for data flow
 
-### Estructura del proyecto
+### Project Structure
 
 ```
 BrewSnap/
 ├── App/
-│   ├── BrewSnapApp.swift           # Entry point, menú bar + ventana
-│   ├── AppState.swift              # Estado global observable
+│   ├── BrewSnapApp.swift           # Entry point, menu bar + window
+│   ├── AppState.swift              # Global observable state
 ├── Views/
-│   ├── MainView.swift              # Ventana principal con las 3 pestañas
-│   ├── MenuBarView.swift           # Menu bar extra (icono + acciones rápidas)
-│   ├── ExportView.swift            # Vista de exportar / crear snapshot
-│   ├── ProfilesView.swift          # Lista de perfiles (work, personal, etc.)
-│   ├── SyncView.swift              # Estado de sync con GitHub
-│   ├── SettingsView.swift          # Configuración (token, repo, etc.)
+│   ├── MainView.swift              # Main window with tabs
+│   ├── MenuBarView.swift           # Menu bar extra (icon + quick actions)
+│   ├── ExportView.swift            # Export / create snapshot view
+│   ├── ImportView.swift            # Import view (local or GitHub)
+│   ├── PackagesView.swift          # Packages view (All / Formulae / Casks)
+│   ├── SyncView.swift              # GitHub sync status
+│   ├── RepositoryView.swift        # Public repo links
+│   ├── SettingsView.swift          # Settings (token, repo, etc.)
 │   └── Components/
-│       ├── PackageRow.swift        # Fila de paquete con nombre + versión
-│       ├── StatusBadge.swift       # Badge de estado (synced, out of sync, etc.)
-│       └── DiffView.swift          # Vista de diferencias entre snapshots
+│       ├── PackageRow.swift        # Package row with name + version
+│       ├── StatusBadge.swift       # Status badge (synced, out of sync, etc.)
+│       └── DiffView.swift          # Diff view between snapshots
 ├── Models/
-│   ├── BrewSnapshot.swift          # Modelo principal del JSON
-│   ├── Package.swift               # Modelo de paquete (formula/cask)
-│   ├── Tap.swift                   # Modelo de tap
-│   ├── Service.swift               # Modelo de servicio
-│   └── Profile.swift               # Modelo de perfil
+│   ├── BrewSnapshot.swift          # Main JSON model
+│   ├── BrewFormula.swift           # Formula model
+│   ├── BrewCask.swift              # Cask model
+│   ├── BrewTap.swift               # Tap model
+│   ├── BrewService.swift           # Service model
+│   └── BrewProfile.swift           # Profile model
 ├── Services/
-│   ├── BrewService.swift           # Interfaz con brew CLI (scan, install, etc.)
-│   ├── GitHubService.swift         # API GitHub: crear repo, commit, push
-│   ├── SnapshotService.swift       # Generación y lectura de snapshots JSON
-│   ├── DiffService.swift           # Comparación entre dos snapshots
-│   └── KeychainService.swift       # Almacenamiento seguro del token
+│   ├── HomebrewService.swift       # Brew CLI interface (scan, install, etc.)
+│   ├── GitHubService.swift         # GitHub API: create repo, commit, push
+│   ├── SnapshotService.swift       # JSON snapshot generation and reading
+│   ├── DiffService.swift           # Comparison between two snapshots
+│   └── KeychainService.swift       # Secure token storage
 ├── Utilities/
-│   ├── ShellExecutor.swift         # Wrapper para Process (ejecutar brew/git)
-│   ├── JSONEncoder+Pretty.swift    # Encoder JSON con formato legible
-│   └── VersionHelper.swift         # Parseo de versiones de brew
+│   ├── ShellExecutor.swift         # Wrapper for Process (run brew/git)
+│   ├── Color+Hex.swift             # Brand colors centralized in Assets
+│   ├── JSONEncoder+Pretty.swift    # Pretty JSON encoder
+│   └── VersionHelper.swift         # Brew version parsing
 └── Resources/
     └── Assets.xcassets/
+        ├── AccentColor.colorset/   # BrewOrange #FBB040
+        ├── BrewNavy.colorset/      # BrewNavy #1D3557
+        ├── BrewRed.colorset/       # BrewRed #FF2C2C
+        └── AppIcon.appiconset/
 ```
 
-### Modelo de datos (JSON)
+### Data Model (JSON)
 
 ```json
 {
@@ -130,241 +138,236 @@ BrewSnap/
 
 ## Features
 
-### Fase 1 — MVP
+### Phase 1 — MVP
 
-#### 1. Snapshot (Exportar)
-- Botón **"Create Snapshot"**
-- Ejecuta internamente:
-  - `brew list --formulae --versions` → parsear nombre + versión
-  - `brew list --casks --versions` → parsear nombre + versión
-  - `brew tap` → lista de taps
+#### 1. Snapshot (Export)
+- **"Create Snapshot"** button
+- Runs internally:
+  - `brew list --formula --versions` → parse name + version
+  - `brew list --cask --versions` → parse name + version
+  - `brew tap` → list of taps
   - `brew tap-info --json` → remote URL, trusted status
-  - `brew services list --json` → estado de servicios
-  - `brew pin` → paquetes congelados
-  - `brew --prefix` → info del sistema
-- Genera el JSON con toda la metadata
-- Muestra preview del JSON en la app antes de subir
+  - `brew services list --json` → services status
+  - `brew list --pinned` → pinned packages
+  - `brew --cellar` → system info
+- Generates JSON with full metadata
+- Shows JSON preview in the app before uploading
 
 #### 2. GitHub Integration
-- Botón **"Create Private Repo"**
-  - Usa GitHub API (`POST /user/repos`) para crear repositorio privado
-  - Nombre: `brewsnap` (o configurable)
-  - Almacena el token en Keychain
-  - Primera vez: pedir token GitHub con permisos `repo`
-  - Flujo:
-    1. Pedir token al usuario (con link a GitHub Settings > Tokens)
-    2. Validar token con `GET /user`
-    3. Crear repo con `POST /user/repos { "private": true }`
-    4. Guardar repo name en UserDefaults
+- **"Create Private Repo"** button
+  - Uses GitHub API (`POST /user/repos`) to create private repository
+  - Name: `brewsnap` (or configurable)
+  - Stores token in Keychain
+  - First time: asks for GitHub token with `repo` permissions
+  - Flow:
+    1. Ask user for token (with link to GitHub Settings > Tokens)
+    2. Validate token with `GET /user`
+    3. Create repo with `POST /user/repos { "private": true }`
+    4. Save repo name in UserDefaults
 
-#### 3. Sync (Update automático)
-- Botón **"Update"**
-  - Genera nuevo snapshot automáticamente
-  - Compara con el JSON anterior en el repo
-  - Si hay cambios:
+#### 3. Sync (Automatic Update)
+- **"Update"** button
+  - Generates new snapshot automatically
+  - Compares with previous JSON in the repo
+  - If changes:
     1. `git add brewsnap.json`
     2. `git commit -m "snapshot: 67 formulae, 23 casks — $(date)"`
     3. `git push`
-  - Si no hay cambios: muestra "Already up to date"
-  - Todo sin intervención del usuario
-  - Flujo técnico: clone/pull el repo en un directorio temporal, generar JSON, comparar, commit si hay diff, push
+  - If no changes: shows "Already up to date"
+  - No user intervention required
+  - Technical flow: clone/pull repo in temp directory, generate JSON, compare, commit if diff, push
 
-#### 4. Perfiles
-- Guardar múltiples snapshots con nombre
-- Ejemplo: `work.json`, `personal.json`, `dev.json`
-- Cada perfil es un archivo JSON independiente en el repo
-- Botón para cambiar de perfil activo
+#### 4. Profiles
+- Save multiple snapshots with names
+- Example: `work.json`, `personal.json`, `dev.json`
+- Each profile is a standalone JSON file in the repo
+- Button to switch active profile
 
-### Fase 2 — Importar
+### Phase 2 — Import
 
-#### 5. Importar en nueva máquina
-- Botón **"Import from repo"**
-  - Descarga el JSON del repo
-  - Muestra lista de paquetes a instalar con checkboxes
-  - Opción de dry-run (ver qué instalaría sin instalar)
-  - Instala en orden: taps → formulae → casks → servicios
-  - Progreso en tiempo real (barra de progreso + log)
-  - Al terminar: snapshot automático del estado actual
+#### 5. Import on New Machine
+- **"Import from repo"** button
+  - Downloads JSON from repo
+  - Shows list of packages to install with checkboxes
+  - Dry-run option (see what would be installed without installing)
+  - Installs in order: taps → formulae → casks → services
+  - Real-time progress (progress bar + log)
+  - On finish: automatic snapshot of current state
 
-#### 6. Diff entre máquinas
-- Botón **"Compare"**
-  - Selecciona dos snapshots (o dos perfiles)
-  - Muestra diferencias:
-    - Paquetes solo en máquina A
-    - Paquetes solo en máquina B
-    - Paquetes con versiones diferentes
-    - Taps diferentes
-  - Vista tipo `git diff` con colores
+#### 6. Diff Between Machines
+- **"Compare"** button
+  - Select two snapshots (or two profiles)
+  - Shows differences:
+    - Packages only on machine A
+    - Packages only on machine B
+    - Packages with different versions
+    - Different taps
+  - `git diff`-style view with colors
 
-### Fase 3 — Extras
+### Phase 3 — Extras
 
-#### 7. Menu bar
-- Icono en la barra de menús
-- Muestra estado: número de paquetes, última sync
-- Click rápido: crear snapshot, abrir ventana principal
-- Notificaciones: "Tu snapshot está desactualizado" (si detecta cambios)
+#### 7. Menu Bar
+- Icon in the menu bar
+- Shows status: number of packages, last sync
+- Quick click: create snapshot, open main window
+- Notifications: "Your snapshot is outdated" (if changes detected)
 
-#### 8. Historial
-- Ver historial de commits del repo en la app
-- Cada snapshot es un commit con mensaje descriptivo
-- Botón para restaurar un snapshot anterior (checkout + import)
-- Timeline visual de cambios
+#### 8. History
+- View repo commit history in the app
+- Each snapshot is a commit with descriptive message
+- Button to restore a previous snapshot (checkout + import)
+- Visual timeline of changes
 
 #### 9. Auto-snapshot
-- Opcional: detectar cambios en brew automáticamente
-- Ejemplo: después de cada `brew install` o `brew upgrade`
-- Background service que vigila el estado de brew
-- Preguntar antes de subir cambios
+- Optional: automatically detect brew changes
+- Example: after each `brew install` or `brew upgrade`
+- Background service that watches brew state
+- Ask before pushing changes
 
-#### 10. Markdown del snapshot
-- Generar un `SNAPSHOT.md` legible en el repo
-- Tabla de paquetes con nombre, versión, tap, tamaño
-- Historial de cambios con fechas
-- Stats: total paquetes, espacio en disco, tendencia
-
----
-
-## Flujo de usuario
-
-### Primera vez
-```
-1. Abrir BrewSnap
-2. Introducir token de GitHub (con link de ayuda)
-3. Clic "Create Private Repo" → se crea brewsnap en GitHub
-4. Clic "Create Snapshot" → escanea brew → genera JSON → sube al repo
-5. Listo. La app queda en menu bar monitorizando
-```
-
-### Actualización diaria
-```
-1. Usuario instala/actualiza paquetes con brew normalmente
-2. Clic "Update" en BrewSnap (o auto-snapshot si está activado)
-3. La app detecta los cambios, genera JSON y sube al repo
-4. Commit automático: "snapshot: 69 formulae (+2), 23 casks — 2026-09-15"
-```
-
-### Nueva máquina
-```
-1. Instalar BrewSnap desde DMG (release de github) o `brew install raulmoracode/tap/brewsnap`
-2. Introducir token de GitHub (o usar el mismo si ya lo tienes)
-3. Clic "Import from repo"
-4. Seleccionar perfil (work/personal)
-5. Ver lista de paquetes → clic "Install"
-6. BrewSnap instala todo en orden con progreso visual
-7. Snapshot automático del estado final
-```
+#### 10. Snapshot Markdown
+- Generate a readable `SNAPSHOT.md` in the repo
+- Package table with name, version, tap, size
+- Change history with dates
+- Stats: total packages, disk usage, trend
 
 ---
 
-## Datos de brew necesarios
+## User Flows
+
+### First Time
+```
+1. Open BrewSnap
+2. Enter GitHub token (with help link)
+3. Click "Create Private Repo" → brewsnap is created on GitHub
+4. Click "Create Snapshot" → scans brew → generates JSON → pushes to repo
+5. Done. App stays in menu bar monitoring
+```
+
+### Daily Update
+```
+1. User installs/updates packages with brew normally
+2. Click "Update" in BrewSnap (or auto-snapshot if enabled)
+3. App detects changes, generates JSON and pushes to repo
+4. Automatic commit: "snapshot: 69 formulae (+2), 23 casks — 2026-09-15"
+```
+
+### New Machine
+```
+1. Install BrewSnap from DMG (github release) or `brew install raulmoracode/tap/brewsnap`
+2. Enter GitHub token (or use same one if you already have it)
+3. Click "Import from repo"
+4. Select profile (work/personal)
+5. See package list → click "Install"
+6. BrewSnap installs everything in order with visual progress
+7. Automatic snapshot of final state
+```
+
+---
+
+## Brew Data Required
 
 ```bash
-# Info del sistema
+# System info
 brew --prefix          # /opt/homebrew
 brew --version         # Homebrew version
-uname -m               # arm64 o x86_64
+uname -m               # arm64 or x86_64
 sw_vers -ProductVersion  # macOS version
 
 # Formulae
-brew list --formulae --versions    # nombre + versión
-brew list --formulae               # solo nombres
-brew outdated --formulae           # cuáles están desactualizados
-brew pin                           # paquetes congelados
-brew missing                       # dependencias rotas
+brew list --formula --versions    # name + version
+brew list --formula               # names only
+brew outdated --formula           # which are outdated
+brew list --pinned                # pinned packages
+brew missing                      # broken dependencies
 
 # Casks
-brew list --casks --versions       # nombre + versión
-brew list --casks                  # solo nombres
-brew outdated --casks              # cuáles están desactualizados
+brew list --cask --versions       # name + version
+brew list --cask                  # names only
+brew outdated --cask              # which are outdated
 
 # Taps
-brew tap                            # taps instalados
-brew tap-info --json                # info detallada de cada tap
+brew tap                            # installed taps
+brew tap-info --json                # detailed info per tap
 
-# Servicios
-brew services list                  # estado de servicios
+# Services
+brew services list                  # services status
+brew services list --json           # JSON
 
-# Disc Usage
-du -sh $(brew --cellar)             # espacio total
-du -sh $(brew --prefix)/Caskroom   # espacio de casks
+# Disk Usage
+du -sh $(brew --cellar)             # total space
+du -sh $(brew --prefix)/Caskroom   # casks space
 ```
 
 ---
 
-## GitHub API que usamos
+## GitHub API Used
 
 ```
-POST /user/repos                    # Crear repo privado
-GET  /user                          # Validar token
-GET  /repos/{owner}/{repo}/contents/{path}  # Leer archivo del repo
-PUT  /repos/{owner}/{repo}/contents/{path}  # Crear/actualizar archivo
-GET  /repos/{owner}/{repo}/commits          # Historial de commits
-DELETE /repos/{owner}/{repo}                # Eliminar repo (opcional)
+POST /user/repos                    # Create private repo
+GET  /user                          # Validate token
+GET  /repos/{owner}/{repo}/contents/{path}  # Read file from repo
+PUT  /repos/{owner}/{repo}/contents/{path}  # Create/update file
+GET  /repos/{owner}/{repo}/commits          # Commit history
+DELETE /repos/{owner}/{repo}                # Delete repo (optional)
 ```
 
-Cada "sync" es un `PUT /contents/{path}` que crea un commit automático.
+Each "sync" is a `PUT /contents/{path}` that creates an automatic commit.
 
 ---
 
-## Nombre y branding
+## Name and Branding
 
-- **Nombre**: BrewSnap
-- **Tagline**: "Tu entorno Homebrew, sincronizado y protegido"
-- **Icono**: Un grifo (faucet) con una flecha circular → representa "snap" del estado
-- **Color**: Naranja brew (#FBB040) + azul oscuro (#1D3557)
+- **Name**: BrewSnap
+- **Tagline**: "Your Homebrew environment, synced and protected"
+- **Icon**: A faucet with a circular arrow → represents "snap" of the state
+- **Colors**: Brew orange (#FBB040) + dark blue (#1D3557) — centralized in `Assets.xcassets` (`AccentColor`, `BrewNavy`, `BrewRed` #FF2C2C) and `Utilities/Color+Hex.swift`
 - **Bundle ID**: `com.raulmorasanchez.BrewSnap`
 
 ---
 
-## Requisitos mínimos
+## Minimum Requirements
 
-- macOS 15.0 (Sequoia) o superior
-- Homebrew instalado
-- Token de GitHub con permisos `repo` (privado)
-- ~20 MB de espacio en disco
-
----
-
-## Repositorios (importante para cualquier IA con contexto)
-
-BrewSnap se distribuye con **2 repositorios separados**. Esto es una restricción de
-Homebrew: el comando `brew install raulmoracode/tap/brewsnap` resuelve
-obligatoriamente a `github.com/raulmoracode/homebrew-tap`
-(ver `docs.brew.sh/Taps`: `brew tap <user>/<repo>` clona `homebrew-<repo>`).
-
-1. **`raulmoracode/brewsnap`** — este repositorio. Todo el código de la app,
-   releases (DMG) y esta documentación.
-2. **`raulmoracode/homebrew-tap`** — repositorio mínimo que solo contiene
-   `Casks/brewsnap.rb` (el cask que apunta al DMG del release).
-
-No usar el tap oficial de Homebrew (`homebrew/cask`): exige apps firmadas y
-notarizadas por Apple, lo que requiere el Apple Developer Program (99 $/año).
-Este proyecto NO lo usa. En un tap personal esta exigencia no aplica, por lo que
-el cask funciona sin Developer Program (aunque macOS mostrará una alerta de
-Gatekeeper en el primer arranque: Clic derecho → Abrir).
-
-### Automatización recomendada
-
-Un workflow de GitHub Actions en este repo (disparado por un release) que:
-1. Builda el DMG y lo sube como release asset.
-2. Actualiza `Casks/brewsnap.rb` en `raulmoracode/homebrew-tap`.
+- macOS 15.0 (Sequoia) or later
+- Homebrew installed
+- GitHub token with `repo` permissions (private)
+- ~20 MB disk space
 
 ---
 
-## Build y distribución
+## Repositories (important for any AI with context)
+
+BrewSnap is distributed with **2 separate repositories**. This is a Homebrew restriction:
+`brew install raulmoracode/tap/brewsnap` obligatorily resolves to `github.com/raulmoracode/homebrew-tap`
+(see `docs.brew.sh/Taps`: `brew tap <user>/<repo>` clones `homebrew-<repo>`).
+
+1. **`raulmoracode/brewsnap`** — this repository. All app code, releases (DMG) and this documentation.
+2. **`raulmoracode/homebrew-tap`** — minimal repo that only contains `Casks/brewsnap.rb` (the cask pointing to the DMG).
+
+Do not use the official Homebrew tap (`homebrew/cask`): it requires apps signed and notarized by Apple, which needs the Apple Developer Program ($99/year).
+This project does NOT use it. In a personal tap this requirement does not apply, so the cask works without Developer Program (although macOS will show a Gatekeeper alert on first launch: Right click → Open).
+
+### Recommended Automation
+
+A GitHub Actions workflow in this repo (triggered by a release) that:
+1. Builds the DMG and uploads it as a release asset.
+2. Updates `Casks/brewsnap.rb` in `raulmoracode/homebrew-tap`.
+
+---
+
+## Build and Distribution
 
 ```bash
-# Desarrollo
+# Development
 open BrewSnap.xcodeproj
-# Cmd+R para ejecutar
+# Cmd+R to run
 
-# Distribución (sin Apple Developer Program, distribución por código fuente)
-# Opción 1: DMG desde Xcode → subir como release asset a raulmoracode/brewsnap
-# Opción 2: brew install raulmoracode/tap/brewsnap (requiere el tap documentado arriba)
+# Distribution (without Apple Developer Program, source distribution)
+# Option 1: DMG from Xcode → upload as release asset to raulmoracode/brewsnap
+# Option 2: brew install raulmoracode/tap/brewsnap (requires tap documented above)
 ```
 
 ---
 
-## Licencia
+## License
 
-MIT — libre para usar, modificar y distribuir.
+MIT — free to use, modify and distribute.

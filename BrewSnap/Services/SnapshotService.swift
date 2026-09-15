@@ -1,5 +1,5 @@
 // SnapshotService.swift
-// BrewSnap — Generación y persistencia de snapshots.
+// BrewSnap — Snapshot generation and persistence.
 
 import Foundation
 

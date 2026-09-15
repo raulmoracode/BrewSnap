@@ -1,5 +1,5 @@
 // PackageRow.swift
-// BrewSnap — Fila de paquete (nombre + versión).
+// BrewSnap — Package row (name + version).
 
 import SwiftUI
 

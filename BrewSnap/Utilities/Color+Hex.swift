@@ -1,5 +1,5 @@
 // Color+Hex.swift
-// BrewSnap — Extensión compartida para colores hex de marca (#FBB040, #1D3557).
+// BrewSnap — Shared extension for brand hex colors (#FBB040, #1D3557).
 
 import SwiftUI
 

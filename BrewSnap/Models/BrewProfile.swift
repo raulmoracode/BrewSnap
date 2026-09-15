@@ -1,5 +1,5 @@
 // BrewProfile.swift
-// BrewSnap — Modelo de perfil (work, personal, etc.).
+// BrewSnap — Profile model (work, personal, etc.).
 
 import Foundation
 

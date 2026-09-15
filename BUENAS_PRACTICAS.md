@@ -1,60 +1,60 @@
-# Buenas prácticas de Swift para código limpio (listo para IA)
+# Swift Best Practices for Clean Code (Ready for AI)
 
-Checklist para escribir Swift claro y ordenado antes de pasárselo a una IA.
+Checklist for writing clear and organized Swift before passing it to an AI.
 
-## 1. Estructura y organización
+## 1. Structure and Organization
 
-- [ ] Un tipo por archivo (o pocos, si están muy relacionados)
-- [ ] Nombre de archivo igual que el tipo principal (`UserProfileView.swift`, no `Screen2.swift`)
-- [ ] Separación por capas: Models, Views, ViewModels, Services, Utils
-- [ ] Uso de `// MARK: -` para agrupar secciones en archivos largos
+- [ ] One type per file (or few if closely related)
+- [ ] File name matches main type (`UserProfileView.swift`, not `Screen2.swift`)
+- [ ] Separation by layers: Models, Views, ViewModels, Services, Utils
+- [ ] Use `// MARK: -` to group sections in long files
 
-## 2. Nombres claros
+## 2. Clear Names
 
-- [ ] Nombres descriptivos y completos (`fetchUserProfile()`, no `fetch()` o `f1()`)
-- [ ] Convenciones estándar: `camelCase` para variables/funciones, `PascalCase` para tipos
-- [ ] Sin abreviaturas ambiguas (excepto estándar como `id`, `url`)
-- [ ] Booleanos que se leen como pregunta: `isLoading`, `hasError`, `canSubmit`
+- [ ] Descriptive and complete names (`fetchUserProfile()`, not `fetch()` or `f1()`)
+- [ ] Standard conventions: `camelCase` for variables/functions, `PascalCase` for types
+- [ ] No ambiguous abbreviations (except standard like `id`, `url`)
+- [ ] Booleans that read as questions: `isLoading`, `hasError`, `canSubmit`
 
-## 3. Funciones y tipos pequeños
+## 3. Small Functions and Types
 
-- [ ] Funciones cortas, una sola responsabilidad
-- [ ] Si una función necesita comentarios para "secciones" internas, dividirla
-- [ ] Evitar funciones con muchos parámetros (usar structs de configuración)
-- [ ] Preferir `struct` sobre `class` cuando no se necesite herencia ni identidad de referencia
+- [ ] Short functions, single responsibility
+- [ ] If a function needs comments for internal "sections", split it
+- [ ] Avoid functions with many parameters (use configuration structs)
+- [ ] Prefer `struct` over `class` when you don't need inheritance or reference identity
 
-## 4. Tipado y seguridad
+## 4. Typing and Safety
 
-- [ ] Evitar `Any`, `AnyObject` y forzar unwraps (`!`)
-- [ ] Usar `guard let` / `if let` en vez de `!`
-- [ ] Enums con valores asociados en vez de strings mágicos o flags booleanos combinados
-- [ ] Evitar `as!`; usar `as?` con manejo de fallo
+- [ ] Avoid `Any`, `AnyObject` and force unwraps (`!`)
+- [ ] Use `guard let` / `if let` instead of `!`
+- [ ] Enums with associated values instead of magic strings or combined boolean flags
+- [ ] Avoid `as!`; use `as?` with failure handling
 
-## 5. Manejo de errores
+## 5. Error Handling
 
-- [ ] Usar `throws` / `Result` en vez de silenciar errores o devolver `nil` sin contexto
-- [ ] Definir tipos de error propios (`enum NetworkError: Error`) en vez de `NSError` genérico
+- [ ] Use `throws` / `Result` instead of silencing errors or returning `nil` without context
+- [ ] Define custom error types (`enum NetworkError: Error`) instead of generic `NSError`
 
-## 6. Comentarios y documentación
+## 6. Comments and Documentation
 
-- [ ] Comentar el **por qué**, no el qué
-- [ ] Usar `///` para documentar funciones públicas o complejas
-- [ ] Comentario breve al inicio del archivo explicando su propósito general
+- [ ] Comment the **why**, not the what
+- [ ] Use `///` to document public or complex functions
+- [ ] Brief comment at the top of the file explaining its general purpose
 
-## 7. Consistencia
+## 7. Consistency
 
-- [ ] Un solo estilo de formato (indentación, llaves, espacios)
-- [ ] Usar **SwiftLint** o **swift-format** para automatizar el estilo
-- [ ] Orden consistente: propiedades → inicializadores → métodos públicos → métodos privados
+- [ ] Single format style (indentation, braces, spaces)
+- [ ] Use **SwiftLint** or **swift-format** to automate style
+- [ ] Consistent order: properties → initializers → public methods → private methods
 
-## 8. Dependencias explícitas
+## 8. Explicit Dependencies
 
-- [ ] Evitar singletons y estado global escondido (`UserDefaults.standard` disperso)
-- [ ] Inyectar dependencias en el `init`
+- [ ] Avoid singletons and hidden global state (`UserDefaults.standard` scattered)
+- [ ] Inject dependencies in `init`
 
-## 9. Antes de pasarlo a una IA
+## 9. Before Passing to an AI
 
-- [ ] Eliminar código muerto (funciones sin usar, comentarios viejos, `// TODO` obsoletos)
-- [ ] Quitar datos sensibles: API keys, tokens, URLs internas, nombres de clientes reales
-- [ ] Pasar solo el fragmento relevante + contexto de tipos usados (protocolos, structs relacionados) si el proyecto es grande
-- [ ] Indicar versión de Swift y target (iOS/macOS, SwiftUI/UIKit)
+- [ ] Remove dead code (unused functions, old comments, obsolete `// TODO`)
+- [ ] Remove sensitive data: API keys, tokens, internal URLs, real client names
+- [ ] Pass only the relevant fragment + context of used types (protocols, related structs) if the project is large
+- [ ] Indicate Swift version and target (iOS/macOS, SwiftUI/UIKit)

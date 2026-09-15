@@ -1,11 +1,11 @@
 // GitHubService.swift
-// BrewSnap — Cliente GitHub API v3 para crear repos y sincronizar snapshots.
+// BrewSnap — GitHub API v3 client for creating repos and syncing snapshots.
 
 import Foundation
 
 // MARK: - Error
 
-/// Errores de GitHubService.
+/// GitHubService errors.
 enum GitHubError: LocalizedError {
     case invalidToken
     case repoExists
@@ -16,11 +16,11 @@ enum GitHubError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidToken:
-            return "Token de GitHub inválido o sin permisos"
+            return "Invalid GitHub token or insufficient permissions"
         case .repoExists:
-            return "El repositorio ya existe"
+            return "Repository already exists"
         case .network(let message):
-            return "Error de red: \(message)"
+            return "Network error: \(message)"
         case .api(let message, let code):
             return "GitHub API error (\(code)): \(message)"
         case .encodingFailed:
@@ -136,7 +136,7 @@ final class GitHubService: Sendable {
         return (decoded.sha, string)
     }
 
-    /// Crea o actualiza un archivo vía PUT /contents.
+    /// Creates or updates a file via PUT /contents.
     @discardableResult
     func putFile(owner: String, repo: String, path: String, content: String, message: String, sha: String? = nil) async throws -> String {
         let base64 = Data(content.utf8).base64EncodedString()

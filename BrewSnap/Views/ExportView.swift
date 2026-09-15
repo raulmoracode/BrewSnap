@@ -1,5 +1,5 @@
 // ExportView.swift
-// BrewSnap — Pantalla Export con 2 opciones: subir al repo o descargar local.
+// BrewSnap — Export screen with 2 options: upload to repo or download locally.
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -20,7 +20,7 @@ struct ExportView: View {
             VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Export").font(.title2.bold())
-                Text("Guarda tu entorno Homebrew en un JSON y elige dónde conservarlo.")
+                Text("Save your Homebrew environment as JSON and choose where to keep it.")
                     .font(.callout).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -33,11 +33,11 @@ struct ExportView: View {
 
             if let snap = appState.snapshot, snap.formulae.isEmpty && snap.casks.isEmpty && snap.taps.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("No se detectaron paquetes — verifica brew", systemImage: "exclamationmark.octagon.fill")
+                    Label("No packages found — check brew", systemImage: "exclamationmark.octagon.fill")
                         .foregroundStyle(.orange).font(.callout.weight(.semibold))
-                    Text("brew: \(ShellExecutor.brewExecutable()) · existe: \(FileManager.default.isExecutableFile(atPath: ShellExecutor.brewExecutable()) ? "sí" : "no")")
+                    Text("brew: \(ShellExecutor.brewExecutable()) · exists: \(FileManager.default.isExecutableFile(atPath: ShellExecutor.brewExecutable()) ? "yes" : "no")")
                         .font(.caption.monospaced()).foregroundStyle(.secondary)
-                    Text("Ejecuta en Terminal: brew list --formula --versions | wc -l")
+                    Text("Run in Terminal: brew list --formula --versions | wc -l")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
@@ -46,27 +46,27 @@ struct ExportView: View {
             // Siempre visible — 2 opciones (responsive: HStack si cabe, VStack si no)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 16) {
-                // Opción 1: Subir al repo
+                // Option 1: Upload to repo
                 VStack(spacing: 10) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 32))
                         .foregroundStyle(Color(hex: "#1D3557"))
-                    Text("Subir al repo")
+                    Text("Upload to repo")
                         .font(.headline)
-                    Text("Sincroniza el JSON a tu repo privado en GitHub")
+                    Text("Sync the JSON to your private GitHub repo")
                         .font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .frame(height: 32)
                     Button {
                         Task { await uploadToRepo() }
                     } label: {
-                        Label(isUploading ? "Subiendo…" : "Subir al repo", systemImage: "arrow.triangle.2.circlepath")
+                        Label(isUploading ? "Uploading…" : "Upload to repo", systemImage: "arrow.triangle.2.circlepath")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#1D3557"))
                     .disabled(appState.snapshot == nil || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || appState.githubToken.isEmpty)
                     if appState.githubToken.isEmpty {
-                        Text("Configura tu token en Settings")
+                        Text("Configure your token in Settings")
                             .font(.caption2).foregroundStyle(.orange)
                     } else if !appState.repoOwner.isEmpty {
                         Text("\(appState.repoOwner)/\(appState.repoName)")
@@ -78,20 +78,20 @@ struct ExportView: View {
                 .background(.background, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
 
-                // Opción 2: Descargar local
+                // Option 2: Download locally
                 VStack(spacing: 10) {
                     Image(systemName: "arrow.down.circle.fill")
                         .font(.system(size: 32))
                         .foregroundStyle(Color(hex: "#FBB040"))
-                    Text("Descargar local")
+                    Text("Download locally")
                         .font(.headline)
-                    Text("Guarda el JSON en tu Mac")
+                    Text("Save the JSON to your Mac")
                         .font(.caption).foregroundStyle(.secondary)
                         .frame(height: 32)
                     Button {
                         saveJSON()
                     } label: {
-                        Label("Descargar JSON", systemImage: "arrow.down.doc.fill")
+                        Label("Download JSON", systemImage: "arrow.down.doc.fill")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#FBB040"))
@@ -109,16 +109,16 @@ struct ExportView: View {
                 VStack(spacing: 16) {
                     VStack(spacing: 10) {
                         Image(systemName: "arrow.up.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#1D3557"))
-                        Text("Subir al repo").font(.headline)
-                        Text("Sincroniza el JSON a tu repo privado en GitHub").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(height: 32)
-                        Button { Task { await uploadToRepo() } } label: { Label(isUploading ? "Subiendo…" : "Subir al repo", systemImage: "arrow.triangle.2.circlepath") }
+                        Text("Upload to repo").font(.headline)
+                        Text("Sync the JSON to your private GitHub repo").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(height: 32)
+                        Button { Task { await uploadToRepo() } } label: { Label(isUploading ? "Uploading…" : "Upload to repo", systemImage: "arrow.triangle.2.circlepath") }
                             .buttonStyle(.borderedProminent).tint(Color(hex: "#1D3557")).disabled(appState.snapshot == nil || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || appState.githubToken.isEmpty)
                     }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
                     VStack(spacing: 10) {
                         Image(systemName: "arrow.down.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#FBB040"))
-                        Text("Descargar local").font(.headline)
-                        Text("Guarda el JSON en tu Mac").font(.caption).foregroundStyle(.secondary).frame(height: 32)
-                        Button { saveJSON() } label: { Label("Descargar JSON", systemImage: "arrow.down.doc.fill") }
+                        Text("Download locally").font(.headline)
+                        Text("Save the JSON to your Mac").font(.caption).foregroundStyle(.secondary).frame(height: 32)
+                        Button { saveJSON() } label: { Label("Download JSON", systemImage: "arrow.down.doc.fill") }
                             .buttonStyle(.borderedProminent).tint(Color(hex: "#FBB040")).disabled(appState.snapshot == nil)
                     }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
                 }
@@ -141,12 +141,12 @@ struct ExportView: View {
                     VStack(spacing: 12) {
                         if appState.isScanning {
                             ProgressView().scaleEffect(1.2)
-                            Text("Escaneando…").font(.headline)
+                            Text("Scanning…").font(.headline)
                         } else {
                             Image(systemName: "shippingbox.fill").font(.system(size: 36)).foregroundStyle(.secondary)
-                            Text("Preparando snapshot…").font(.headline)
+                            Text("Preparing snapshot…").font(.headline)
                         }
-                        Text("Se genera automáticamente")
+                        Text("Generated automatically")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.padding(32)
                 }
@@ -175,7 +175,7 @@ struct ExportView: View {
 
     // MARK: - Private Methods
 
-    /// Crea un snapshot fresco y actualiza el preview JSON.
+    /// Creates a fresh snapshot and updates the JSON preview.
     private func createSnapshot() async {
         uploadMessage = nil
         await appState.scan()
@@ -190,7 +190,7 @@ struct ExportView: View {
         panel.nameFieldStringValue = "\(appState.selectedProfile.fileName)"
         if panel.runModal() == .OK, let url = panel.url, let snap = appState.snapshot {
             try? SnapshotService.save(snap, to: url)
-            uploadMessage = "Guardado en \(url.lastPathComponent) ✓"
+            uploadMessage = "Saved to \(url.lastPathComponent) ✓"
             uploadIsError = false
         }
     }
@@ -199,13 +199,13 @@ struct ExportView: View {
         guard let snap = appState.snapshot else { return }
         let token = appState.githubToken
         guard !token.isEmpty else {
-            uploadMessage = "Configura tu token en Settings"
+            uploadMessage = "Configure your token in Settings"
             uploadIsError = true
             return
         }
         let owner = appState.repoOwner.trimmingCharacters(in: .whitespaces)
         guard !owner.isEmpty else {
-            uploadMessage = "Configura el owner del repo en Sync o Settings"
+            uploadMessage = "Configure the repo owner in Sync or Settings"
             uploadIsError = true
             return
         }
@@ -214,7 +214,7 @@ struct ExportView: View {
         do {
             let gh = GitHubService(token: token)
             try await gh.commitSnapshot(owner: owner, repo: appState.repoName, snapshot: snap, profile: appState.selectedProfile.name)
-            uploadMessage = "Subido a \(owner)/\(appState.repoName) ✓"
+            uploadMessage = "Uploaded to \(owner)/\(appState.repoName) ✓"
             uploadIsError = false
         } catch {
             uploadMessage = error.localizedDescription

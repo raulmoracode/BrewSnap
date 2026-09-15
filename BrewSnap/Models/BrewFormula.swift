@@ -1,9 +1,9 @@
 // BrewFormula.swift
-// BrewSnap — Modelo de fórmula Homebrew (parte de snapshot JSON).
+// BrewSnap — Homebrew formula model (part of snapshot JSON).
 
 import Foundation
 
-/// Fórmula Homebrew (ej. `git`, `python@3.13`).
+/// Homebrew formula (e.g. `git`, `python@3.13`).
 struct BrewFormula: Codable, Identifiable, Hashable, Sendable {
     // MARK: - Properties
 

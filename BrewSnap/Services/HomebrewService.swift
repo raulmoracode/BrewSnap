@@ -1,11 +1,11 @@
 // HomebrewService.swift
-// BrewSnap — Servicio que escanea el entorno Homebrew vía CLI y genera snapshots.
+// BrewSnap — Service that scans the Homebrew environment via CLI and generates snapshots.
 
 import Foundation
 
 // MARK: - Error
 
-/// Errores específicos de HomebrewService.
+/// HomebrewService specific errors.
 enum BrewServiceError: LocalizedError {
     case brewNotFound
     case commandFailed(String)
@@ -13,7 +13,7 @@ enum BrewServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .brewNotFound:
-            return "Homebrew no está instalado o no está en el PATH"
+            return "Homebrew is not installed or not in PATH"
         case .commandFailed(let message):
             return message
         }
@@ -22,12 +22,12 @@ enum BrewServiceError: LocalizedError {
 
 // MARK: - Service
 
-/// Escanea el sistema Homebrew de forma secuencial (evita deadlock por lock de brew).
+/// Scans the Homebrew system sequentially (avoids brew lock deadlock).
 final class HomebrewService: Sendable {
 
     // MARK: - Public API
 
-    /// Genera un snapshot completo del entorno Homebrew.
+    /// Generates a complete snapshot of the Homebrew environment.
     func scan() async throws -> BrewSnapshot {
         print("[BrewSnap] scan start")
         let startedAt = Date()
@@ -126,7 +126,7 @@ final class HomebrewService: Sendable {
         ShellExecutor.brewExecutable()
     }
 
-    /// Ejecuta un trabajo con timeout y devuelve fallback si expira.
+    /// Runs a job with timeout and returns fallback on expiry.
     private func withTimeout<T: Sendable>(
         _ label: String,
         seconds: Double,

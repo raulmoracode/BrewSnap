@@ -1,5 +1,5 @@
 // BrewSnapshot.swift
-// BrewSnap — Modelo principal del snapshot JSON (versionado, Codable).
+// BrewSnap — Main snapshot JSON model (versioned, Codable).
 
 import Foundation
 

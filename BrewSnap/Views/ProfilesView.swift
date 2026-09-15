@@ -1,5 +1,5 @@
 // ProfilesView.swift
-// BrewSnap — Gestión de perfiles (work, personal).
+// BrewSnap — Profile management (work, personal).
 
 import SwiftUI
 
@@ -14,8 +14,8 @@ struct ProfilesView: View {
     var body: some View {
         @Bindable var state = appState
         VStack(alignment: .leading, spacing: 16) {
-            Text("Perfiles").font(.title2.bold())
-            Text("Cada perfil es un archivo JSON independiente en el repo (work.json, personal.json…).")
+            Text("Profiles").font(.title2.bold())
+            Text("Each profile is a standalone JSON file in the repo (work.json, personal.json…).")
                 .font(.subheadline).foregroundStyle(.secondary)
 
             List {
@@ -25,14 +25,14 @@ struct ProfilesView: View {
                             HStack(spacing: 6) {
                                 Text(profile.displayName).font(.headline)
                                 if profile.name == appState.selectedProfile.name {
-                                    Text("Activo").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 2).background(Color.accentColor, in: Capsule()).foregroundStyle(.white)
+                                    Text("Active").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 2).background(Color.accentColor, in: Capsule()).foregroundStyle(.white)
                                 }
                             }
                             Text(profile.fileName).font(.caption.monospaced()).foregroundStyle(.secondary)
                         }
                         Spacer()
                         if profile.name != appState.selectedProfile.name {
-                            Button("Activar") { appState.selectedProfile = profile }
+                            Button("Activate") { appState.selectedProfile = profile }
                                 .buttonStyle(.bordered).controlSize(.small)
                         }
                     }.padding(.vertical, 4)
@@ -40,8 +40,8 @@ struct ProfilesView: View {
             }.frame(height: 220)
 
             HStack(spacing: 8) {
-                TextField("Nuevo perfil (ej: dev)", text: $newProfileName).textFieldStyle(.roundedBorder).frame(maxWidth: 220)
-                Button("Añadir") {
+                TextField("New profile (e.g. dev)", text: $newProfileName).textFieldStyle(.roundedBorder).frame(maxWidth: 220)
+                Button("Add") {
                     let name = newProfileName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
                     guard !name.isEmpty, !appState.profiles.contains(where: { $0.name == name }) else { return }
                     appState.profiles.append(BrewProfile(name: name, createdAt: Date(), isActive: false))
@@ -53,8 +53,8 @@ struct ProfilesView: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 8) {
-                Text("Comparar snapshots").font(.headline)
-                Text("Fase 2: compara dos snapshots para ver diferencias tipo git diff.").font(.caption).foregroundStyle(.secondary)
+                Text("Compare snapshots").font(.headline)
+                Text("Phase 2: compare two snapshots to see git diff-like differences.").font(.caption).foregroundStyle(.secondary)
                 Button {
                     if let snap = appState.snapshot { diffSnapshot = snap; showDiff = true }
                 } label: { Label("Compare (preview)", systemImage: "arrow.left.arrow.right") }

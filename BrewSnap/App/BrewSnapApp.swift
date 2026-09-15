@@ -22,7 +22,7 @@ struct BrewSnapApp: App {
                         options: [
                             .applicationName: "BrewSnap",
                             .applicationVersion: "1.0.0",
-                            .credits: NSAttributedString(string: "Tu entorno Homebrew, sincronizado y protegido.")
+                            .credits: NSAttributedString(string: "Your Homebrew environment, synced and protected.")
                         ]
                     )
                 }

@@ -1,5 +1,5 @@
 // BrewTap.swift
-// BrewSnap — Modelo de tap Homebrew.
+// BrewSnap — Homebrew tap model.
 
 import Foundation
 

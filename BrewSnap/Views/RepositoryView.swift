@@ -1,5 +1,5 @@
 // RepositoryView.swift
-// BrewSnap — Enlaces públicos al repo.
+// BrewSnap — Public links to the repo.
 
 import SwiftUI
 
@@ -15,11 +15,11 @@ struct RepositoryView: View {
                         .foregroundStyle(Color(hex: "#FBB040"))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("BrewSnap").font(.title2.bold())
-                        Text("Tu entorno Homebrew, sincronizado y protegido")
+                        Text("Your Homebrew environment, synced and protected")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
-                Text("Proyecto open source — cualquier persona puede visitar el repositorio, ver el código, reportar issues o contribuir.")
+                Text("Open source project — anyone can visit the repository, view the code, report issues or contribute.")
                     .font(.callout).foregroundStyle(.secondary)
             }
 
@@ -28,14 +28,14 @@ struct RepositoryView: View {
             VStack(alignment: .leading, spacing: 16) {
                 RepoCard(
                     title: "raulmoracode/brewsnap",
-                    subtitle: "App, releases (DMG) y documentación",
+                    subtitle: "App, releases (DMG) and documentation",
                     url: "https://github.com/raulmoracode/brewsnap",
                     icon: "chevron.left.forwardslash.chevron.right",
                     color: Color(hex: "#1D3557")
                 )
                 RepoCard(
                     title: "raulmoracode/homebrew-tap",
-                    subtitle: "Tap para brew install raulmoracode/tap/brewsnap",
+                    subtitle: "Tap for brew install raulmoracode/tap/brewsnap",
                     url: "https://github.com/raulmoracode/homebrew-tap",
                     icon: "arrow.down.circle.fill",
                     color: Color(hex: "#FBB040")

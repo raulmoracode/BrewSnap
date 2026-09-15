@@ -1,5 +1,5 @@
 // MainView.swift
-// BrewSnap — Navegación principal (7 tabs).
+// BrewSnap — Main navigation (7 tabs).
 
 import SwiftUI
 
@@ -32,13 +32,13 @@ struct MainView: View {
         NavigationSplitView(columnVisibility: .constant(.all)) {
             VStack(spacing: 0) {
                 List(selection: $selectedTab) {
-                    Section("Principal") {
+                    Section("Main") {
                         Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
                         Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
                         Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
                         Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
                     }
-                    Section("Proyecto") {
+                    Section("Project") {
                         Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
                         Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
                     }

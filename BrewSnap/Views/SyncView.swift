@@ -1,5 +1,5 @@
 // SyncView.swift
-// BrewSnap — Sincronización con GitHub.
+// BrewSnap — GitHub sync.
 
 import SwiftUI
 
@@ -14,14 +14,14 @@ struct SyncView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Sync con GitHub").font(.title2.bold())
-            Text("Sincroniza tu snapshot con un repositorio privado en GitHub. Un clic, sin comandos git.")
+            Text("Sync with GitHub").font(.title2.bold())
+            Text("Sync your snapshot with a private repository en GitHub. Un clic, sin comandos git.")
                 .font(.subheadline).foregroundStyle(.secondary)
 
             GroupBox {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Repositorio").font(.headline)
+                        Text("Repository").font(.headline)
                         Spacer()
                         statusBadge
                     }
@@ -34,10 +34,10 @@ struct SyncView: View {
                     .onAppear { ownerInput = appState.repoOwner }
 
                     if let snapshot = appState.snapshot {
-                        Text("Snapshot listo: \(snapshot.formulaeCount) formulae, \(snapshot.casksCount) casks")
+                        Text("Snapshot ready: \(snapshot.formulaeCount) formulae, \(snapshot.casksCount) casks")
                             .font(.caption).foregroundStyle(.secondary)
                     } else {
-                        Label("Primero crea un snapshot en la pestaña Export", systemImage: "info.circle").font(.caption).foregroundStyle(.orange)
+                        Label("First create a snapshot in the Export tab", systemImage: "info.circle").font(.caption).foregroundStyle(.orange)
                     }
 
                     HStack(spacing: 12) {
@@ -48,7 +48,7 @@ struct SyncView: View {
                         }
                         .buttonStyle(.borderedProminent).disabled(appState.snapshot == nil || isSyncing || ownerInput.isEmpty)
 
-                        Button("Crear repo privado") {
+                        Button("Create private repo") {
                             Task { await createRepo() }
                         }
                         .buttonStyle(.bordered).disabled(ownerInput.isEmpty || appState.githubToken.isEmpty)
@@ -62,11 +62,11 @@ struct SyncView: View {
                 }.padding(4)
             }
 
-            GroupBox("Cómo funciona") {
+            GroupBox("How it works") {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label("Genera JSON y lo sube vía GitHub API (PUT /contents)", systemImage: "1.circle.fill")
+                    Label("Generates JSON and uploads via GitHub API (PUT /contents)", systemImage: "1.circle.fill")
                     Label("Si no hay cambios: \"Already up to date\"", systemImage: "2.circle.fill")
-                    Label("Cada sync es un commit: snapshot: 67 formulae, 23 casks — 2026-09-15", systemImage: "3.circle.fill")
+                    Label("Each sync is a commit: snapshot: 67 formulae, 23 casks — 2026-09-15", systemImage: "3.circle.fill")
                 }.font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading).padding(4)
             }
 
@@ -89,7 +89,7 @@ struct SyncView: View {
     private func doSync() async {
         guard let snapshot = appState.snapshot else { return }
         let token = appState.githubToken
-        guard !token.isEmpty else { message = "Configura tu token en Settings"; isError = true; return }
+        guard !token.isEmpty else { message = "Configure your token in Settings"; isError = true; return }
         isSyncing = true; defer { isSyncing = false }
         do {
             let gh = GitHubService(token: token)
@@ -106,16 +106,16 @@ struct SyncView: View {
 
     private func createRepo() async {
         let token = appState.githubToken
-        guard !token.isEmpty else { message = "Configura tu token en Settings"; isError = true; return }
+        guard !token.isEmpty else { message = "Configure your token in Settings"; isError = true; return }
         isSyncing = true; defer { isSyncing = false }
         do {
             let gh = GitHubService(token: token)
             let owner = try await gh.validateToken()
             ownerInput = owner; appState.repoOwner = owner
             try await gh.createPrivateRepo(name: appState.repoName)
-            message = "Repositorio \(owner)/\(appState.repoName) creado ✓"; isError = false
+            message = "Repository \(owner)/\(appState.repoName) creado ✓"; isError = false
         } catch GitHubError.repoExists {
-            message = "El repo ya existe — puedes hacer Update"; isError = false
+            message = "Repo already exists — you can Update"; isError = false
         } catch {
             message = error.localizedDescription; isError = true
         }

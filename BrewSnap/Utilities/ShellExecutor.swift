@@ -1,5 +1,5 @@
 // ShellExecutor.swift
-// BrewSnap — Wrapper para Process (ejecuta brew/git de forma segura).
+// BrewSnap — Wrapper for Process (safely runs brew/git).
 
 import Foundation
 
@@ -26,7 +26,7 @@ struct ShellResult: Sendable {
 
 /// Lightweight wrapper around Foundation.Process for running brew/git commands.
 enum ShellExecutor {
-    /// Resuelve el binario de brew sin depender del PATH (crítico con sandbox)
+    /// Resolves the brew binary without depending on PATH (critical with sandbox)
     static func brewExecutable() -> String {
         let candidates = [
             "/opt/homebrew/bin/brew",
@@ -36,7 +36,7 @@ enum ShellExecutor {
         for c in candidates where FileManager.default.isExecutableFile(atPath: c) {
             return c
         }
-        return "brew" // fallback (dependerá del PATH vía zsh -l)
+        return "brew" // fallback (will depend on PATH via zsh -l)
     }
     @discardableResult
     static func run(

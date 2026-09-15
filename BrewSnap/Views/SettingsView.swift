@@ -1,5 +1,5 @@
 // SettingsView.swift
-// BrewSnap — Configuración GitHub token y repo.
+// BrewSnap — GitHub token and repo configuration.
 
 import SwiftUI
 
@@ -25,19 +25,19 @@ struct SettingsView: View {
                     Button(showToken ? "Ocultar" : "Mostrar") { showToken.toggle() }.controlSize(.small)
                 }
                 LabeledContent("Token") {
-                    Text("Se guarda en Keychain").font(.caption).foregroundStyle(.secondary)
+                    Text("Stored in Keychain").font(.caption).foregroundStyle(.secondary)
                 }
-                TextField("Nombre del repo", text: $repoNameInput).textFieldStyle(.roundedBorder)
+                TextField("Repo name", text: $repoNameInput).textFieldStyle(.roundedBorder)
                 LabeledContent("Repo") {
-                    Text("Privado · \(repoNameInput.isEmpty ? "brewsnap" : repoNameInput)").font(.caption).foregroundStyle(.secondary)
+                    Text("Private · \(repoNameInput.isEmpty ? "brewsnap" : repoNameInput)").font(.caption).foregroundStyle(.secondary)
                 }
                 HStack {
                     Button {
                         Task { await validate() }
-                    } label: { Label(isValidating ? "Validando…" : "Validar token", systemImage: "checkmark.shield.fill") }
+                    } label: { Label(isValidating ? "Validating…" : "Validate token", systemImage: "checkmark.shield.fill") }
                     .disabled(tokenInput.isEmpty || isValidating)
                     if let tokenURL = URL(string: "https://github.com/settings/tokens/new?scopes=repo&description=BrewSnap") {
-                        Link("Crear token en GitHub", destination: tokenURL)
+                        Link("Create token on GitHub", destination: tokenURL)
                             .font(.caption)
                     }
                 }
@@ -48,9 +48,9 @@ struct SettingsView: View {
 
             Section("General") {
                 LabeledContent("Bundle ID", value: "com.raulmorasanchez.BrewSnap")
-                LabeledContent("Versión", value: "1.0.0 (MVP)")
+                LabeledContent("Version", value: "1.0.0 (MVP)")
                 if let repoURL = URL(string: "https://github.com/raulmoracode/brewsnap") {
-                    Link("Repositorio brewsnap", destination: repoURL)
+                    Link("Repository brewsnap", destination: repoURL)
                 }
                 if let tapURL = URL(string: "https://github.com/raulmoracode/homebrew-tap") {
                     Link("Homebrew tap", destination: tapURL)
@@ -58,9 +58,9 @@ struct SettingsView: View {
             }
 
             Section {
-                Button("Guardar") { save() }.buttonStyle(.borderedProminent)
-                Button("Borrar token del Keychain", role: .destructive) {
-                    try? KeychainService.delete(); tokenInput = ""; validationMessage = "Token borrado"
+                Button("Save") { save() }.buttonStyle(.borderedProminent)
+                Button("Delete token from Keychain", role: .destructive) {
+                    try? KeychainService.delete(); tokenInput = ""; validationMessage = "Token deleted"
                 }.disabled(tokenInput.isEmpty && appState.githubToken.isEmpty)
             }
         }
@@ -78,7 +78,7 @@ struct SettingsView: View {
     private func save() {
         if !tokenInput.isEmpty { try? KeychainService.save(token: tokenInput) }
         if !repoNameInput.isEmpty { appState.repoName = repoNameInput }
-        validationMessage = "Guardado ✓"
+        validationMessage = "Saved ✓"
     }
 
     private func validate() async {
@@ -86,7 +86,7 @@ struct SettingsView: View {
         do {
             let gh = GitHubService(token: tokenInput)
             let user = try await gh.validateToken()
-            validationMessage = "✓ Token válido — usuario: \(user)"
+            validationMessage = "✓ Valid token — user: \(user)"
         } catch {
             validationMessage = "✗ \(error.localizedDescription)"
         }

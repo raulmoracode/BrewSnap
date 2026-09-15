@@ -1,5 +1,5 @@
 // VersionHelper.swift
-// BrewSnap — Helpers para parsear versiones de brew y system info.
+// BrewSnap — Helpers for parsing brew versions and system info.
 
 import Foundation
 

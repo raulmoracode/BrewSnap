@@ -1,5 +1,5 @@
 // MenuBarView.swift
-// BrewSnap — Menu bar extra (desplegable).
+// BrewSnap — Menu bar extra (dropdown).
 
 import SwiftUI
 
@@ -17,7 +17,7 @@ struct MenuBarView: View {
             }
 
             if let snap = appState.snapshot {
-                Text("Último snapshot: \(snap.createdAt.formatted(date: .abbreviated, time: .shortened))")
+                Text("Last snapshot: \(snap.createdAt.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption2).foregroundStyle(.secondary)
             }
 
@@ -26,7 +26,7 @@ struct MenuBarView: View {
             Button {
                 Task { await appState.scan() }
             } label: {
-                Label(appState.isScanning ? "Escaneando…" : "Create Snapshot", systemImage: "camera.fill")
+                Label(appState.isScanning ? "Scanning…" : "Create Snapshot", systemImage: "camera.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -37,10 +37,10 @@ struct MenuBarView: View {
 
             Button {
                 NSApp.activate(ignoringOtherApps: true)
-                // Abre la app en grande (centrada y zoom si no está maximizada)
+                // Open the app large (centered and zoomed if not maximized)
                 if let window = NSApp.windows.first(where: { $0.canBecomeKey }) ?? NSApp.windows.first {
                     window.makeKeyAndOrderFront(nil)
-                    // Tamaño grande por defecto
+                    // Large default size
                     let targetSize = NSSize(width: 1100, height: 700)
                     var frame = window.frame
                     frame.size = targetSize
@@ -51,7 +51,7 @@ struct MenuBarView: View {
                         frame.origin.y = screenFrame.midY - frame.height / 2
                     }
                     window.setFrame(frame, display: true, animate: true)
-                    // Si no está zoomed, maximiza
+                    // If not zoomed, maximize
                     if !window.isZoomed {
                         window.zoom(nil)
                     }

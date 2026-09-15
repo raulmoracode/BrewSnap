@@ -1,5 +1,5 @@
 // PackagesView.swift
-// BrewSnap — 3 columnas All / Formulae / Casks.
+// BrewSnap — 3 columns All / Formulae / Casks.
 
 import SwiftUI
 
@@ -34,7 +34,7 @@ struct PackagesView: View {
                 Button {
                     Task { await appState.scan() }
                 } label: {
-                    Label(appState.isScanning ? "Escaneando…" : "Rescan", systemImage: "arrow.triangle.2.circlepath")
+                    Label(appState.isScanning ? "Scanning…" : "Rescan", systemImage: "arrow.triangle.2.circlepath")
                 }.disabled(appState.isScanning)
             }
         }
@@ -48,13 +48,13 @@ struct PackagesView: View {
                     Text("\(snap.formulaeCount + snap.casksCount) paquetes · \(snap.formulaeCount) formulae · \(snap.casksCount) casks")
                         .font(.subheadline).foregroundStyle(.secondary)
                 } else {
-                    Text("Todos tus paquetes Homebrew").font(.subheadline).foregroundStyle(.secondary)
+                    Text("All your Homebrew packages").font(.subheadline).foregroundStyle(.secondary)
                 }
             }
             Spacer()
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                TextField("Buscar paquete…", text: $searchText)
+                TextField("Search packages…", text: $searchText)
                     .textFieldStyle(.plain).frame(width: 200)
                 if !searchText.isEmpty {
                     Button {
@@ -71,7 +71,7 @@ struct PackagesView: View {
     private var emptyState: some View {
         VStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill").font(.largeTitle).foregroundStyle(.orange)
-            Text("No se encontraron paquetes").font(.headline)
+            Text("No packages found").font(.headline)
             Text("brew: \(ShellExecutor.brewExecutable())").font(.caption.monospaced()).foregroundStyle(.secondary)
             if let err = appState.lastError {
                 Text(err).font(.caption).foregroundStyle(.red).multilineTextAlignment(.center).padding(.horizontal)
@@ -81,14 +81,14 @@ struct PackagesView: View {
     }
 
     private func columns(snap: BrewSnapshot) -> some View {
-        // Filtra por búsqueda
+        // Filter by search
         let q = searchText.lowercased().trimmingCharacters(in: .whitespaces)
         func matches(_ name: String) -> Bool { q.isEmpty || name.lowercased().contains(q) }
 
         let filteredFormulae = snap.formulae.filter { matches($0.name) }.sorted { $0.name < $1.name }
         let filteredCasks = snap.casks.filter { matches($0.name) }.sorted { $0.name < $1.name }
 
-        // All = mezcla formulae + casks, orden alfabético, con tag de tipo
+        // All = mix of formulae + casks, alphabetically sorted, with type tag
         struct AllItem: Identifiable {
             let id: String
             let name: String

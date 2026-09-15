@@ -1,5 +1,5 @@
 // DiffService.swift
-// BrewSnap — Comparación entre snapshots.
+// BrewSnap — Comparison between snapshots.
 
 import Foundation
 

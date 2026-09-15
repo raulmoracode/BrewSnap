@@ -1,5 +1,5 @@
 // BrewCask.swift
-// BrewSnap — Modelo de cask Homebrew (parte de snapshot JSON).
+// BrewSnap — Homebrew cask model (part of snapshot JSON).
 
 import Foundation
 

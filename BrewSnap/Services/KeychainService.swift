@@ -1,5 +1,5 @@
 // KeychainService.swift
-// BrewSnap — Almacenamiento seguro del token.
+// BrewSnap — Secure token storage.
 
 import Foundation
 import Security

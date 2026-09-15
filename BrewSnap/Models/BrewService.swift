@@ -1,5 +1,5 @@
 // BrewService.swift
-// BrewSnap — Modelo de servicio Homebrew.
+// BrewSnap — Homebrew service model.
 
 import Foundation
 

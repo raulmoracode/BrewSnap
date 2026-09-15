@@ -1,5 +1,5 @@
 // StatusBadge.swift
-// BrewSnap — Badge de estado sync.
+// BrewSnap — Sync status badge.
 
 import SwiftUI
 
