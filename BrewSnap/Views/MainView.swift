@@ -69,9 +69,6 @@ struct MainView: View {
                 .padding(.horizontal, 12).padding(.vertical, 8)
                 Divider()
                 HStack(spacing: 8) {
-                    Image(systemName: "shippingbox.fill")
-                        .foregroundStyle(Color(hex: "#FBB040"))
-                        .font(.caption)
                     VStack(alignment: .leading, spacing: 1) {
                         Text("Homebrew")
                             .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
