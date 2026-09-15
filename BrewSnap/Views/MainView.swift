@@ -12,7 +12,6 @@ struct MainView: View {
         case export = "Export"
         case packages = "Packages"
         case sync = "Sync"
-        case profiles = "Profiles"
         case repository = "Repository"
         case settings = "Settings"
         var icon: String {
@@ -21,7 +20,6 @@ struct MainView: View {
             case .export: return "square.and.arrow.up"
             case .packages: return "shippingbox.fill"
             case .sync: return "arrow.triangle.2.circlepath"
-            case .profiles: return "person.2"
             case .repository: return "link"
             case .settings: return "gearshape.fill"
             }
@@ -37,7 +35,6 @@ struct MainView: View {
                         Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
                         Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
                         Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
-                        Label(Tab.profiles.rawValue, systemImage: Tab.profiles.icon).tag(Tab.profiles)
                     }
                     Section("Proyecto") {
                         Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
@@ -76,7 +73,6 @@ struct MainView: View {
                 case .export: ExportView()
                 case .packages: PackagesView()
                 case .sync: SyncView()
-                case .profiles: ProfilesView()
                 case .repository: RepositoryView()
                 case .settings: SettingsView()
                 }
