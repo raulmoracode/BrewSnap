@@ -2,6 +2,7 @@
 // BrewSnap — Menu bar extra (dropdown).
 
 import SwiftUI
+import AppKit
 
 struct MenuBarView: View {
     @Environment(AppState.self) private var appState
@@ -9,7 +10,7 @@ struct MenuBarView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .center, spacing: 12) {
             HStack(spacing: 8) {
                 Image(systemName: "shippingbox.fill").foregroundStyle(Color(hex: "#FBB040"))
                 Text("BrewSnap").font(.headline)
@@ -33,31 +34,25 @@ struct MenuBarView: View {
             .tint(Color(hex: "#FBB040"))
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
+            .handCursor()
             .disabled(appState.isScanning)
 
             Button {
                 NSApp.activate(ignoringOtherApps: true)
-                // Open the app large (centered and zoomed if not maximized)
-                if let window = NSApp.windows.first(where: { $0.canBecomeKey }) ?? NSApp.windows.first {
-                    window.makeKeyAndOrderFront(nil)
-                    // Large default size
-                    let targetSize = NSSize(width: 1100, height: 700)
-                    var frame = window.frame
-                    frame.size = targetSize
-                    // Centrar en pantalla
-                    if let screen = window.screen ?? NSScreen.main {
-                        let screenFrame = screen.visibleFrame
-                        frame.origin.x = screenFrame.midX - frame.width / 2
-                        frame.origin.y = screenFrame.midY - frame.height / 2
-                    }
-                    window.setFrame(frame, display: true, animate: true)
-                    // If not zoomed, maximize
-                    if !window.isZoomed {
-                        window.zoom(nil)
-                    }
-                } else {
-                    NSApp.sendAction(Selector(("showWindow:")), to: nil, from: nil)
+                if let miniaturized = NSApp.windows.first(where: { $0.isMiniaturized }) {
+                    miniaturized.deminiaturize(nil)
+                    miniaturized.makeKeyAndOrderFront(nil)
+                    enlargeAndZoom(window: miniaturized)
+                    return
                 }
+                if let window = NSApp.windows.first(where: { $0.canBecomeKey }) ?? NSApp.windows.first {
+                    if !window.isVisible { window.setIsVisible(true) }
+                    window.makeKeyAndOrderFront(nil)
+                    window.orderFrontRegardless()
+                    enlargeAndZoom(window: window)
+                    return
+                }
+                NSApp.sendAction(Selector(("showWindow:")), to: nil, from: nil)
             } label: {
                 Label("Abrir BrewSnap…", systemImage: "arrow.up.left.and.arrow.down.right")
                     .frame(maxWidth: .infinity)
@@ -65,6 +60,7 @@ struct MenuBarView: View {
             .buttonStyle(.bordered)
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
+            .handCursor()
 
             Divider()
 
@@ -78,8 +74,56 @@ struct MenuBarView: View {
             .tint(Color(hex: "#FF2C2C"))
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
+            .handCursor()
         }
         .padding(12)
         .frame(width: 220)
+        .onAppear {
+            // Center the dropdown window (was left-aligned to the icon)
+            DispatchQueue.main.async {
+                // MenuBarExtra window is a NSPanel with isFloatingPanel
+                let candidates = NSApp.windows.filter { $0.isVisible && String(describing: type(of: $0)).contains("Panel") }
+                let target = candidates.first ?? NSApp.keyWindow ?? NSApp.mainWindow
+                guard let window = target, let screen = window.screen ?? NSScreen.main else { return }
+                var frame = window.frame
+                // Center horizontally on screen, just below menu bar (not left of icon)
+                frame.origin.x = screen.visibleFrame.midX - frame.width / 2
+                frame.origin.y = screen.visibleFrame.maxY - frame.height - 8
+                window.setFrame(frame, display: true, animate: false)
+            }
+        }
+    }
+
+    private func enlargeAndZoom(window: NSWindow) {
+        let targetSize = NSSize(width: 1100, height: 700)
+        var frame = window.frame
+        frame.size = targetSize
+        if let screen = window.screen ?? NSScreen.main {
+            let screenFrame = screen.visibleFrame
+            frame.origin.x = screenFrame.midX - frame.width / 2
+            frame.origin.y = screenFrame.midY - frame.height / 2
+        }
+        window.setFrame(frame, display: true, animate: true)
+        if !window.isZoomed {
+            window.zoom(nil)
+        }
+    }
+}
+
+private struct HandCursorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+    }
+}
+
+private extension View {
+    func handCursor() -> some View {
+        modifier(HandCursorModifier())
     }
 }
