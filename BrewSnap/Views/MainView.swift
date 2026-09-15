@@ -35,9 +35,13 @@ struct MainView: View {
                 List(selection: $selectedTab) {
                     Section("Main") {
                         Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
+                            .contentShape(Rectangle()).handCursor()
                         Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
+                            .contentShape(Rectangle()).handCursor()
                         Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
+                            .contentShape(Rectangle()).handCursor()
                         Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
+                            .contentShape(Rectangle()).handCursor()
                     }
                     Section("Project") {
                         Button {
@@ -46,9 +50,11 @@ struct MainView: View {
                             }
                         } label: {
                             Label(Tab.repository.rawValue, systemImage: Tab.repository.icon)
+                                .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).handCursor()
                         Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
+                            .contentShape(Rectangle()).handCursor()
                     }
                 }
                 HStack(spacing: 2) {
@@ -56,10 +62,12 @@ struct MainView: View {
                     if let url = URL(string: "https://raulmoracode.com") {
                         Link("raulmoracode", destination: url)
                             .font(.caption2.weight(.semibold))
+                            .handCursor()
                     }
                     Spacer()
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
+                .contentShape(Rectangle()).handCursor()
                 Divider()
                 HStack(spacing: 8) {
                     Image(systemName: "shippingbox.fill")
@@ -105,5 +113,25 @@ struct MainView: View {
                 await appState.scan()
             }
         }
+    }
+}
+
+// MARK: - Hand Cursor
+
+private struct HandCursorModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+    }
+}
+
+private extension View {
+    func handCursor() -> some View {
+        modifier(HandCursorModifier())
     }
 }
