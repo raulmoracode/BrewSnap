@@ -118,7 +118,7 @@ struct PackagesView: View {
                         .listStyle(.plain)
                     }
                 }
-                .frame(height: 420)
+                .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
@@ -138,7 +138,7 @@ struct PackagesView: View {
                         .listStyle(.plain)
                     }
                 }
-                .frame(height: 420)
+                .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
@@ -158,7 +158,7 @@ struct PackagesView: View {
                         .listStyle(.plain)
                     }
                 }
-                .frame(height: 420)
+                .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
