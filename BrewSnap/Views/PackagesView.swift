@@ -108,25 +108,7 @@ struct PackagesView: View {
                     ContentUnavailableView.search(text: searchText)
                 } else {
                     List(allItems) { item in
-                        HStack(spacing: 8) {
-                            Text(item.kind)
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 18, height: 18)
-                                .background(item.kind == "F" ? Color.orange : Color.purple, in: RoundedRectangle(cornerRadius: 4))
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 4) {
-                                    Text(item.name).font(.system(.callout, design: .monospaced)).lineLimit(1)
-                                    if item.isPinned { Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.orange) }
-                                }
-                                Text(item.kind == "F" ? "formula" : "cask").font(.caption2).foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            Text(item.version).font(.caption.monospaced()).foregroundStyle(.secondary)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(.quaternary, in: Capsule())
-                        }
-                        .padding(.vertical, 2)
+                        PackageRow(name: item.name, version: item.version, isPinned: item.isPinned)
                     }
                     .listStyle(.plain)
                 }
