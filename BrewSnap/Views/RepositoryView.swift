@@ -37,42 +37,6 @@ struct RepositoryView: View {
                 )
             }
 
-            GroupBox {
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Instalación rápida", systemImage: "terminal.fill").font(.headline)
-                    Text("brew install raulmoracode/tap/brewsnap")
-                        .font(.system(.callout, design: .monospaced))
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
-                        .textSelection(.enabled)
-                    HStack(spacing: 12) {
-                        Button {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString("brew install raulmoracode/tap/brewsnap", forType: .string)
-                        } label: { Label("Copiar", systemImage: "doc.on.doc") }
-                        .buttonStyle(.bordered).controlSize(.small)
-                        Link(destination: URL(string: "https://github.com/raulmoracode/brewsnap/releases")!) {
-                            Label("Ver releases", systemImage: "tag.fill")
-                        }.controlSize(.small)
-                    }
-                }.padding(4)
-            }
-
-            GroupBox {
-                VStack(alignment: .leading, spacing: 6) {
-                    Label("Info", systemImage: "info.circle.fill").font(.headline)
-                    LabeledContent("Bundle ID", value: "com.raulmorasanchez.BrewSnap").font(.callout)
-                    LabeledContent("Licencia", value: "MIT").font(.callout)
-                    LabeledContent("Requiere", value: "macOS 15+ · Homebrew").font(.callout)
-                    HStack {
-                        Link("Reportar issue", destination: URL(string: "https://github.com/raulmoracode/brewsnap/issues/new")!)
-                        Text("·").foregroundStyle(.secondary)
-                        Link("Discussions", destination: URL(string: "https://github.com/raulmoracode/brewsnap/discussions")!)
-                    }.font(.callout)
-                }.padding(4)
-            }
-
             Spacer()
         }
         .padding(20)
