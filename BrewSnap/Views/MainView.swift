@@ -82,6 +82,11 @@ struct MainView: View {
         }
         .navigationTitle("BrewSnap")
         .toolbarBackgroundVisibility(.visible, for: .windowToolbar)
+        .task {
+            if appState.snapshot == nil {
+                await appState.scan()
+            }
+        }
     }
 }
 
