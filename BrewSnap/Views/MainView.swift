@@ -2,6 +2,7 @@
 // BrewSnap — Main navigation (7 tabs).
 
 import SwiftUI
+import AppKit
 
 struct MainView: View {
     @Environment(AppState.self) private var appState
@@ -39,7 +40,14 @@ struct MainView: View {
                         Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
                     }
                     Section("Project") {
-                        Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
+                        Button {
+                            if let url = URL(string: "https://github.com/raulmoracode/brewsnap") {
+                                NSWorkspace.shared.open(url)
+                            }
+                        } label: {
+                            Label(Tab.repository.rawValue, systemImage: Tab.repository.icon)
+                        }
+                        .buttonStyle(.plain)
                         Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
                     }
                 }
