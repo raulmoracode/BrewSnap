@@ -78,7 +78,7 @@ struct ExportView: View {
                     .frame(maxWidth: .infinity)
                     .padding(16)
                     .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
 
                     // Opción 2: Descargar local
                     VStack(spacing: 10) {
@@ -103,7 +103,7 @@ struct ExportView: View {
                     .frame(maxWidth: .infinity)
                     .padding(16)
                     .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
                 }
 
                 if let msg = uploadMessage {
