@@ -26,6 +26,10 @@ struct ExportView: View {
                     Text("Elige cómo exportar tu snapshot")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
+                Text("Guarda tu entorno Homebrew en un JSON y elige dónde conservarlo — descarga en tu Mac o sincronizado en un repositorio privado.")
+                    .font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 2)
             }
 
             if let err = appState.lastError {
