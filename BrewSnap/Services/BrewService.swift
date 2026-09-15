@@ -62,61 +62,107 @@ final class HomebrewService: Sendable {
         )
     }
 
+    // MARK: - Brew binary
+
+    private func brew() -> String { ShellExecutor.brewExecutable() }
+
     // MARK: - Formulae
 
     private func fetchFormulae() async throws -> [(name: String, version: String)] {
-        let result = try await ShellExecutor.runShell("brew list --formula --versions")
-        guard result.isSuccess else { throw BrewServiceError.commandFailed(result.stderr) }
+        let brew = brew()
+        // Intenta directo con binario absoluto, fallback a shell si falla
+        var result: ShellResult
+        do {
+            result = try await ShellExecutor.run(brew, args: ["list", "--formula", "--versions"])
+        } catch {
+            result = try await ShellExecutor.runShell("\(brew) list --formula --versions")
+        }
+        if !result.isSuccess && !result.stderr.isEmpty {
+            // Log para diagnóstico en Console.app
+            print("[BrewSnap] fetchFormulae stderr: \(result.stderr) (brew=\(brew))")
+        }
+        guard !result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            // Fallback shell con PATH completo
+            let fallback = try? await ShellExecutor.runShell("brew list --formula --versions 2>&1; echo __EXIT:$?")
+            if let fb = fallback, fb.stdout.contains("__EXIT:0") {
+                return VersionHelper.parseBrewVersions(output: fb.stdout)
+            }
+            return []
+        }
         return VersionHelper.parseBrewVersions(output: result.stdout)
     }
 
     private func fetchCasks() async throws -> [(name: String, version: String)] {
-        let result = try await ShellExecutor.runShell("brew list --cask --versions 2>/dev/null || brew list --casks --versions 2>/dev/null || true")
-        return VersionHelper.parseBrewVersions(output: result.stdout)
+        let brew = brew()
+        // casks usa --cask en brew 4.x, compat con --casks
+        let argsList = [["list", "--cask", "--versions"], ["list", "--casks", "--versions"]]
+        for args in argsList {
+            if let r = try? await ShellExecutor.run(brew, args: args), r.isSuccess && !r.stdout.isEmpty {
+                return VersionHelper.parseBrewVersions(output: r.stdout)
+            }
+        }
+        let result = try? await ShellExecutor.runShell("\(brew) list --cask --versions 2>/dev/null || \(brew) list --casks --versions 2>/dev/null || brew list --cask --versions 2>/dev/null || true")
+        return VersionHelper.parseBrewVersions(output: result?.stdout ?? "")
     }
 
     private func fetchTaps() async throws -> [BrewTap] {
-        // Prefer JSON for remote info
-        if let jsonData = (try? await ShellExecutor.runShell("brew tap-info --json").stdout.data(using: .utf8)),
-           let taps = try? JSONDecoder().decode([[String: String]].self, from: jsonData) {
-            // fallback handled below
-            _ = taps
+        let brew = brew()
+        var names: [String] = []
+        if let r = try? await ShellExecutor.run(brew, args: ["tap"]), r.isSuccess {
+            names = r.stdout.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        } else if let r2 = try? await ShellExecutor.runShell("\(brew) tap 2>/dev/null || brew tap 2>/dev/null || true") {
+            names = r2.stdout.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         }
-        // Simple text fallback
-        let result = try await ShellExecutor.runShell("brew tap")
-        let names = result.stdout.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-        // Try json details per tap
+        if names.isEmpty {
+            print("[BrewSnap] fetchTaps: 0 taps (brew=\(brew))")
+            return []
+        }
         var detailed: [BrewTap] = []
         for name in names {
-            let infoResult = try? await ShellExecutor.runShell("brew tap-info --json \(name) 2>/dev/null")
-            if let data = infoResult?.stdout.data(using: .utf8),
+            var remote: String? = nil
+            if let r = try? await ShellExecutor.run(brew, args: ["tap-info", "--json", name]),
+               let data = r.stdout.data(using: .utf8),
                let arr = try? JSONDecoder().decode([[String: AnyCodable]].self, from: data),
-               let first = arr.first,
-               let remote = first["remote"]?.value as? String {
-                detailed.append(BrewTap(name: name, remote: remote, trusted: true))
-            } else {
-                detailed.append(BrewTap(name: name, remote: nil, trusted: true))
+               let v = arr.first?["remote"]?.value as? String {
+                remote = v
+            } else if let r2 = try? await ShellExecutor.runShell("\(brew) tap-info --json \(name) 2>/dev/null"),
+                      let data = r2.stdout.data(using: .utf8),
+                      let arr = try? JSONDecoder().decode([[String: AnyCodable]].self, from: data) {
+                remote = arr.first?["remote"]?.value as? String
             }
+            detailed.append(BrewTap(name: name, remote: remote, trusted: true))
         }
         return detailed
     }
 
     private func fetchServices() async throws -> [BrewService] {
-        let result = try? await ShellExecutor.runShell("brew services list --json 2>/dev/null")
-        guard let stdout = result?.stdout, !stdout.isEmpty else { return [] }
-        return VersionHelper.parseBrewServices(jsonString: stdout)
+        let brew = brew()
+        var stdout: String? = nil
+        if let r = try? await ShellExecutor.run(brew, args: ["services", "list", "--json"]) { stdout = r.stdout }
+        else if let r2 = try? await ShellExecutor.runShell("\(brew) services list --json 2>/dev/null || brew services list --json 2>/dev/null || true") { stdout = r2.stdout }
+        guard let s = stdout, !s.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
+        return VersionHelper.parseBrewServices(jsonString: s)
     }
 
     private func fetchPinned() async throws -> Set<String> {
-        let result = try? await ShellExecutor.runShell("brew pin 2>/dev/null || true")
-        let pins = result?.stdout.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } ?? []
+        let brew = brew()
+        var out = ""
+        if let r = try? await ShellExecutor.run(brew, args: ["pin"]) { out = r.stdout }
+        else if let r2 = try? await ShellExecutor.runShell("\(brew) pin 2>/dev/null || brew pin 2>/dev/null || true") { out = r2.stdout }
+        let pins = out.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         return Set(pins)
     }
 
     private func fetchDiskUsage() async throws -> String? {
-        let result = try? await ShellExecutor.runShell("du -sh $(brew --cellar 2>/dev/null) 2>/dev/null | cut -f1 || echo ''")
-        let trimmed = result?.stdout.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? nil : trimmed
+        let brew = brew()
+        // Obtiene cellar path vía brew --cellar y mide
+        var cellar = ""
+        if let r = try? await ShellExecutor.run(brew, args: ["--cellar"]) { cellar = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines) }
+        else if let r2 = try? await ShellExecutor.runShell("\(brew) --cellar 2>/dev/null || brew --cellar 2>/dev/null || echo /opt/homebrew/Cellar") { cellar = r2.stdout.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: "\n").first ?? "" }
+        guard !cellar.isEmpty else { return nil }
+        let du = try? await ShellExecutor.run("/usr/bin/du", args: ["-sh", cellar])
+        let size = du?.stdout.split(separator: "\t").first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? du?.stdout.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return size.isEmpty ? nil : String(size)
     }
 }
 

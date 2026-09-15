@@ -18,11 +18,55 @@
 
 | # | Fecha | Objetivo | Estado | Branch | Commit / Tag |
 |---|-------|----------|--------|--------|--------------|
-| 0 | 2026-09-15 | Bootstrap + MVP compilable (Fase 1: Snapshot, GitHub, Sync, Perfiles) | 🟢 Completada | `main` | — |
+| 0 | 2026-09-15 | Bootstrap + MVP compilable (Fase 1: Snapshot, GitHub, Sync, Perfiles) | 🟢 Completada | `main` | 75a4768 |
+| 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completada | `main` | — |
 | 1 | — | Import en nueva máquina + Diff + dry-run | 🔜 Pendiente | — | — |
 | 2 | — | Menu bar + Historial + Auto-snapshot | 🔜 Pendiente | — | — |
 
 ---
+
+## Iteración 0.1 — Hotfix snapshot en 0 (brew path + sandbox)
+
+**Fecha:** 2026-09-15  
+**Estado:** 🟢 Completada  
+**Branch:** `main`  
+**Reportado:** Usuario: "no me salen los Formulae, los casks ni los Taps que tengo me salen todos en 0"  
+**Causa raíz:** 2 fallos combinados en `BrewSnap/Services/BrewService.swift:15-134` y `BrewSnap.xcodeproj/project.pbxproj:244`
+
+1. **PATH dependiente del sandbox** — `ShellExecutor.runShell("brew ...")` usaba `brew` sin ruta absoluta, dependía de `PATH` vía `zsh -l`. Con `ENABLE_APP_SANDBOX=YES` (heredado del template Xcode) el sandbox bloqueaba `Process` y `PATH` no incluía `/opt/homebrew/bin`, así que todos los `brew list` fallaban silenciosamente (en `HomebrewService.scan()` se hacía `(try? task) ?? []`, sin error visible) → 0 resultados.
+2. **Falta de ruta absoluta** — No había fallback a `/opt/homebrew/bin/brew` (tu brew real `brew --version 7.0.2` en `/opt/homebrew/bin/brew`, verificado con `ls -l /opt/homebrew/bin/brew` y `brew list --formula --versions | wc -l` → 60 formulae reales).
+
+### Cambios realizados
+
+- [x] `BrewSnap/Utilities/ShellExecutor.swift:26-42` — añadido `brewExecutable()` que resuelve `/opt/homebrew/bin/brew` / `/usr/local/bin/brew` vía `FileManager.isExecutableFile(atPath:)`; deja de depender del PATH.
+- [x] `BrewSnap/Utilities/VersionHelper.swift:55-66` — `systemInfo()` ahora usa `ShellExecutor.brewExecutable()` + `run(brew, ["--version"])` en lugar de `runShell("brew --version")`.
+- [x] `BrewSnap/Services/BrewService.swift:18-121` — refactor completo: nuevo `brew()` helper, todos los fetch (`fetchFormulae:67`, `fetchCasks:88`, `fetchTaps:103`, `fetchServices:129`, `fetchPinned:139`, `fetchDiskUsage:148`) usan `ShellExecutor.run(brew, args:)` con fallback a `runShell`; `fetchFormulae` ahora loguea `stderr` en Console.app y hace fallback a shell si stdout vacío; `fetchTaps` / `fetchDiskUsage` resuelven `cellar` vía `brew --cellar` absoluto.
+- [x] `BrewSnap.xcodeproj/project.pbxproj:244,287` — `ENABLE_APP_SANDBOX = YES` → `NO` (2 ocurrencias, Debug y Release). El template traía sandbox activado y bloqueaba `Process` (ver `BrewSnap/App/BrewSnapApp.swift:1` necesita ejecutar binarios externos).
+- [x] `BrewSnap/Views/ExportView.swift:40-63` — añadido warning naranja cuando `snap.formulae.isEmpty && casks.isEmpty` mostrando `ShellExecutor.brewExecutable()` + existencia + hint `brew list --formula --versions | wc -l`.
+- [x] Verificación: `xcodebuild ...` → **BUILD SUCCEEDED**; test directo `/opt/homebrew/bin/brew list --formula --versions` → 60 formulae, `--cask` → 31, `brew tap` → 5 taps, `du -sh /opt/homebrew/Cellar` → 1.1G (ver `TestSnapshot.swift` en /tmp).
+
+### Cómo probar el fix
+
+```bash
+# 1. Clean build (importante tras cambiar sandbox)
+rm -rf ~/Library/Developer/Xcode/DerivedData/BrewSnap-*
+xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build
+open ~/Library/Developer/Xcode/DerivedData/BrewSnap-*/Build/Products/Debug/BrewSnap.app
+# o
+open BrewSnap.xcodeproj  # Cmd+Shift+K (Clean) → Cmd+R
+```
+En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks · 5 taps` (no 0). Si sigue en 0, mira `Console.app` → filtro `BrewSnap` → verás `[BrewSnap] fetchFormulae stderr: ...`.
+
+### Decisión técnica
+
+| Decisión | Alternativa | Motivo |
+|----------|-------------|--------|
+| `brewExecutable()` con candidatos absolutos | Seguir con `zsh -l -c "brew"` | Sandbox no carga login shell, PATH vacío; binario absoluto es determinista |
+| `ENABLE_APP_SANDBOX = NO` | Mantener YES + entitlements `allow-unsigned-executable-memory` | Fase MVP necesita `Process` sin restricciones; sandbox se puede re-activar en Fase 3 con entitlements finos |
+
+---
+
+## Iteración 0 — Bootstrap + MVP compilable (Fase 1)
 
 ## Iteración 0 — Bootstrap + MVP compilable (Fase 1)
 

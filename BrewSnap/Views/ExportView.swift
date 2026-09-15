@@ -44,6 +44,20 @@ struct ExportView: View {
                     StatCard(title: "Homebrew", value: snap.homebrew, icon: "shippingbox")
                 }
 
+                if snap.formulae.isEmpty && snap.casks.isEmpty && snap.taps.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("No se detectaron paquetes — verifica brew", systemImage: "exclamationmark.octagon.fill")
+                            .foregroundStyle(.orange).font(.callout.weight(.semibold))
+                        Text("brew: \(ShellExecutor.brewExecutable()) · existe: \(FileManager.default.isExecutableFile(atPath: ShellExecutor.brewExecutable()) ? "sí" : "no")")
+                            .font(.caption.monospaced()).foregroundStyle(.secondary)
+                        Text("Ejecuta en Terminal: brew list --formula --versions | wc -l  (debería dar 60 en tu máquina)")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Button("Reintentar") { Task { await createSnapshot() } }
+                            .buttonStyle(.bordered).controlSize(.small)
+                    }
+                    .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                }
+
                 TabView {
                     List(snap.formulae, id: \.name) { f in
                         PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)

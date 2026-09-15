@@ -23,6 +23,18 @@ struct ShellResult: Sendable {
 
 /// Lightweight wrapper around Foundation.Process for running brew/git commands.
 enum ShellExecutor {
+    /// Resuelve el binario de brew sin depender del PATH (crítico con sandbox)
+    static func brewExecutable() -> String {
+        let candidates = [
+            "/opt/homebrew/bin/brew",
+            "/usr/local/bin/brew",
+            "/home/linuxbrew/.linuxbrew/bin/brew",
+        ]
+        for c in candidates where FileManager.default.isExecutableFile(atPath: c) {
+            return c
+        }
+        return "brew" // fallback (dependerá del PATH vía zsh -l)
+    }
     @discardableResult
     static func run(
         _ executable: String,

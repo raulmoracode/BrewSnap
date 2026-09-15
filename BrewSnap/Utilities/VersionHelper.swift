@@ -56,7 +56,10 @@ enum VersionHelper {
         let hostname = (try? await ShellExecutor.runOrThrow("/bin/hostname", args: [])) ?? Host.current().localizedName ?? "unknown"
         let macOS = (try? await ShellExecutor.runOrThrow("/usr/bin/sw_vers", args: ["-productVersion"])) ?? "15.0"
         let arch = (try? await ShellExecutor.runOrThrow("/usr/bin/uname", args: ["-m"])) ?? "arm64"
-        let brewVersionRaw = (try? await ShellExecutor.runShell("brew --version"))?.stdout ?? ""
+        let brew = ShellExecutor.brewExecutable()
+        var brewVersionRaw = ""
+        if let r = try? await ShellExecutor.run(brew, args: ["--version"]) { brewVersionRaw = r.stdout }
+        else if let r2 = try? await ShellExecutor.runShell("\(brew) --version 2>/dev/null || brew --version 2>/dev/null || true") { brewVersionRaw = r2.stdout }
         let homebrew = brewVersionRaw.split(separator: "\n").first?.split(separator: " ").last.map(String.init) ?? "unknown"
         return (hostname.trimmingCharacters(in: .whitespacesAndNewlines),
                 macOS.trimmingCharacters(in: .whitespacesAndNewlines),
