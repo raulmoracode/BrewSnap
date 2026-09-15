@@ -20,17 +20,9 @@ struct ExportView: View {
             VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Export").font(.title2.bold())
-                if let snap = appState.snapshot {
-                    Text("\(snap.formulaeCount) formulae · \(snap.casksCount) casks · \(snap.taps.count) taps")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                } else {
-                    Text("Elige cómo exportar tu snapshot")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                }
                 Text("Guarda tu entorno Homebrew en un JSON y elige dónde conservarlo — descarga en tu Mac o sincronizado en un repositorio privado.")
                     .font(.callout).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 2)
             }
 
             if let err = appState.lastError {
