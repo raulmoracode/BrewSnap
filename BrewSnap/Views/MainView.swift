@@ -66,6 +66,16 @@ struct MainView: View {
                 }
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(.quaternary.opacity(0.35))
+                Divider()
+                HStack(spacing: 2) {
+                    Text("by").font(.caption2).foregroundStyle(.secondary)
+                    if let url = URL(string: "https://raulmoracode.com") {
+                        Link("raulmoracode", destination: url)
+                            .font(.caption2.weight(.semibold))
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 12).padding(.vertical, 8)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
