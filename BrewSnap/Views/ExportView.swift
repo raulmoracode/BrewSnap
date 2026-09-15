@@ -16,7 +16,8 @@ struct ExportView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Export").font(.title2.bold())
                 if let snap = appState.snapshot {
@@ -50,8 +51,9 @@ struct ExportView: View {
                 .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
             }
 
-            // Siempre visible — 2 opciones (deshabilitadas si aún no hay snapshot)
-            HStack(spacing: 16) {
+            // Siempre visible — 2 opciones (responsive: HStack si cabe, VStack si no)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) {
                 // Opción 1: Subir al repo
                 VStack(spacing: 10) {
                     Image(systemName: "arrow.up.circle.fill")
@@ -109,6 +111,25 @@ struct ExportView: View {
                 .padding(16)
                 .background(.background, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
+                }
+
+                // Fallback vertical cuando no cabe en horizontal
+                VStack(spacing: 16) {
+                    VStack(spacing: 10) {
+                        Image(systemName: "arrow.up.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#1D3557"))
+                        Text("Subir al repo").font(.headline)
+                        Text("Sincroniza el JSON a tu repo privado en GitHub").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(height: 32)
+                        Button { Task { await uploadToRepo() } } label: { Label(isUploading ? "Subiendo…" : "Subir al repo", systemImage: "arrow.triangle.2.circlepath") }
+                            .buttonStyle(.borderedProminent).tint(Color(hex: "#1D3557")).disabled(appState.snapshot == nil || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || appState.githubToken.isEmpty)
+                    }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
+                    VStack(spacing: 10) {
+                        Image(systemName: "arrow.down.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#FBB040"))
+                        Text("Descargar local").font(.headline)
+                        Text("Guarda el JSON en tu Mac").font(.caption).foregroundStyle(.secondary).frame(height: 32)
+                        Button { saveJSON() } label: { Label("Descargar JSON", systemImage: "arrow.down.doc.fill") }
+                            .buttonStyle(.borderedProminent).tint(Color(hex: "#FBB040")).disabled(appState.snapshot == nil)
+                    }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
+                }
             }
 
             if let msg = uploadMessage {
@@ -154,10 +175,9 @@ struct ExportView: View {
                         .frame(height: 180).padding(8).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
                 }
             }
-
-            Spacer()
+            }
+            .padding(20)
         }
-        .padding(20)
         .task { if appState.snapshot == nil { await createSnapshot() } }
     }
 

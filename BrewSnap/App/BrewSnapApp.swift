@@ -11,8 +11,9 @@ struct BrewSnapApp: App {
         WindowGroup {
             MainView()
                 .environment(appState)
-                .frame(minWidth: 800, minHeight: 600)
+                .frame(minWidth: 1000, idealWidth: 1100, minHeight: 650, idealHeight: 700)
         }
+        .defaultSize(width: 1100, height: 700)
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .appInfo) {

@@ -27,7 +27,7 @@ struct MainView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: .constant(.all)) {
             VStack(spacing: 0) {
                 List(selection: $selectedTab) {
                     Section("Principal") {
