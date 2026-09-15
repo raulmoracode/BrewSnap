@@ -34,14 +34,14 @@ struct MainView: View {
             VStack(spacing: 0) {
                 List(selection: $selectedTab) {
                     Section("Main") {
-                        Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
-                            .contentShape(Rectangle()).handCursor()
-                        Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
-                            .contentShape(Rectangle()).handCursor()
-                        Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
-                            .contentShape(Rectangle()).handCursor()
-                        Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
-                            .contentShape(Rectangle()).handCursor()
+                        HStack { Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon); Spacer() }
+                            .contentShape(Rectangle()).handCursor().tag(Tab.importTab)
+                        HStack { Label(Tab.export.rawValue, systemImage: Tab.export.icon); Spacer() }
+                            .contentShape(Rectangle()).handCursor().tag(Tab.export)
+                        HStack { Label(Tab.packages.rawValue, systemImage: Tab.packages.icon); Spacer() }
+                            .contentShape(Rectangle()).handCursor().tag(Tab.packages)
+                        HStack { Label(Tab.sync.rawValue, systemImage: Tab.sync.icon); Spacer() }
+                            .contentShape(Rectangle()).handCursor().tag(Tab.sync)
                     }
                     Section("Project") {
                         Button {
@@ -49,12 +49,12 @@ struct MainView: View {
                                 NSWorkspace.shared.open(url)
                             }
                         } label: {
-                            Label(Tab.repository.rawValue, systemImage: Tab.repository.icon)
+                            HStack { Label(Tab.repository.rawValue, systemImage: Tab.repository.icon); Spacer() }
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain).handCursor()
-                        Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
-                            .contentShape(Rectangle()).handCursor()
+                        HStack { Label(Tab.settings.rawValue, systemImage: Tab.settings.icon); Spacer() }
+                            .contentShape(Rectangle()).handCursor().tag(Tab.settings)
                     }
                 }
                 HStack(spacing: 2) {
