@@ -34,6 +34,7 @@ struct BrewSnapApp: App {
         Settings {
             SettingsView()
                 .environment(appState)
+                .frame(width: 520, height: 420)
         }
     }
 }

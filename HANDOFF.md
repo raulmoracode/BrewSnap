@@ -20,9 +20,36 @@
 |---|-------|----------|--------|--------|--------------|
 | 0 | 2026-09-15 | Bootstrap + MVP compilable (Fase 1: Snapshot, GitHub, Sync, Perfiles) | 🟢 Completada | `main` | 75a4768 |
 | 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completada | `main` | 0f52476 |
-| 0.2 | 2026-09-15 | Fix escaneo infinito + Packages (All/Formulae/Casks) | 🟢 Completada | `main` | — |
+| 0.2 | 2026-09-15 | Fix escaneo infinito + Packages (All/Formulae/Casks) | 🟢 Completada | `main` | fc199af |
+| 0.3 | 2026-09-15 | Sidebar: Repository + Settings como tabs (no arriba derecha) | 🟢 Completada | `main` | — |
 | 1 | — | Import en nueva máquina + Diff + dry-run | 🔜 Pendiente | — | — |
 | 2 | — | Menu bar + Historial + Auto-snapshot | 🔜 Pendiente | — | — |
+
+---
+
+## Iteración 0.3 — Sidebar: Repository + Settings como tabs
+
+**Fecha:** 2026-09-15  
+**Estado:** 🟢 Completada  
+**Branch:** `main`  
+**Petición:** Añadir debajo de Profiles: `Repository` (enlace público al repo, para cualquier persona) y `Settings` (configurar GitHub token, que no esté arriba a la derecha)  
+**Objetivo:** Sidebar 6 ítems: Export, Packages, Sync, Profiles, Repository, Settings — con Sections
+
+### Cambios realizados
+
+- [x] Nuevo `BrewSnap/Views/RepositoryView.swift:1-110` — Card para `raulmoracode/brewsnap` (app/releases/docs) y `raulmoracode/homebrew-tap` (`brew install raulmoracode/tap/brewsnap`), bloque `Instalación rápida` con comando copiable `brew install …` + `Copiar` + `Ver releases`, GroupBox Info (Bundle ID, MIT, requisitos) + Links `Reportar issue` / `Discussions`. Colores marca `#FBB040` / `#1D3557`.
+- [x] `BrewSnap/Views/SettingsView.swift:56-62` — quitar `.frame(width:520,height:420)` fijo; ahora `scrollContentBackground(.hidden)` y flexible para uso como tab; `BrewSnap/App/BrewSnapApp.swift:34-37` mantiene `Settings { SettingsView().frame(520x420) }` para ventana `Cmd+,` (Settings scene) sin recortar.
+- [x] `BrewSnap/Views/MainView.swift:7-45` — `enum Tab: CaseIterable` añade `repository = "Repository"` (`link`) y `settings = "Settings"` (`gearshape.fill`), orden `export → packages → sync → profiles → repository → settings`. `List` ahora con `Section("Principal")` (4) y `Section("Proyecto")` (2). Toolbar `Button showSettingsWindow` eliminado (Settings ya no está arriba a la derecha). `switch` integra `RepositoryView()` y `SettingsView()`. `navigationSplitViewColumnWidth` 180→200 para nuevo contenido. Auto-inclusión por `PBXFileSystemSynchronizedRootGroup` no requiere tocar `project.pbxproj`.
+- [x] Verificación: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build` → **BUILD SUCCEEDED**.
+
+### Cómo probar
+
+```bash
+cd ~/projects/brewsnap
+xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build
+open BrewSnap.xcodeproj  # Cmd+R
+```
+Sidebar: debajo de Profiles verás **Repository** (abre `https://github.com/raulmoracode/brewsnap` / `homebrew-tap`, copiar comando) y **Settings** (mismo form de token GitHub que antes estaba arriba a la derecha, ahora como tab + sigue en `Cmd+,`).
 
 ---
 

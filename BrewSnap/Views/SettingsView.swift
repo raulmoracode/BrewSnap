@@ -59,7 +59,7 @@ struct SettingsView: View {
             tokenInput = (try? KeychainService.load()) ?? ""
             repoNameInput = appState.repoName
         }
-        .frame(width: 520, height: 420)
+        .scrollContentBackground(.hidden)
     }
 
     private func save() {

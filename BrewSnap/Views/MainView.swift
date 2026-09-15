@@ -9,12 +9,16 @@ struct MainView: View {
         case packages = "Packages"
         case sync = "Sync"
         case profiles = "Profiles"
+        case repository = "Repository"
+        case settings = "Settings"
         var icon: String {
             switch self {
             case .export: return "square.and.arrow.up"
             case .packages: return "shippingbox.fill"
             case .sync: return "arrow.triangle.2.circlepath"
             case .profiles: return "person.2"
+            case .repository: return "link"
+            case .settings: return "gearshape.fill"
             }
         }
     }
@@ -22,16 +26,18 @@ struct MainView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTab) {
-                ForEach(Tab.allCases, id: \.self) { tab in
-                    Label(tab.rawValue, systemImage: tab.icon).tag(tab)
+                Section("Principal") {
+                    Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
+                    Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
+                    Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
+                    Label(Tab.profiles.rawValue, systemImage: Tab.profiles.icon).tag(Tab.profiles)
+                }
+                Section("Proyecto") {
+                    Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
+                    Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
                 }
             }
-            .navigationSplitViewColumnWidth(min: 160, ideal: 180)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button { NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil) } label: { Label("Settings", systemImage: "gearshape") }
-                }
-            }
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
             Group {
                 switch selectedTab {
@@ -39,6 +45,8 @@ struct MainView: View {
                 case .packages: PackagesView()
                 case .sync: SyncView()
                 case .profiles: ProfilesView()
+                case .repository: RepositoryView()
+                case .settings: SettingsView()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
