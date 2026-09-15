@@ -1,3 +1,6 @@
+// DiffView.swift
+// BrewSnap — Vista diff entre snapshots.
+
 import SwiftUI
 
 struct DiffView: View {

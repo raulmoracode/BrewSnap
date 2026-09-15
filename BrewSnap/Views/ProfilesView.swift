@@ -1,3 +1,6 @@
+// ProfilesView.swift
+// BrewSnap — Gestión de perfiles (work, personal).
+
 import SwiftUI
 
 struct ProfilesView: View {

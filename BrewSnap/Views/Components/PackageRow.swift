@@ -1,3 +1,6 @@
+// PackageRow.swift
+// BrewSnap — Fila de paquete (nombre + versión).
+
 import SwiftUI
 
 struct PackageRow: View {

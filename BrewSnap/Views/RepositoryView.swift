@@ -1,3 +1,6 @@
+// RepositoryView.swift
+// BrewSnap — Enlaces públicos al repo.
+
 import SwiftUI
 
 struct RepositoryView: View {
@@ -51,6 +54,10 @@ private struct RepoCard: View {
     let icon: String
     let color: Color
 
+    private var resolvedURL: URL? {
+        URL(string: url)
+    }
+
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
@@ -61,28 +68,24 @@ private struct RepoCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.headline).fontDesign(.monospaced)
                 Text(subtitle).font(.caption).foregroundStyle(.secondary)
-                Link(destination: URL(string: url)!) {
-                    Label(url.replacingOccurrences(of: "https://", with: ""), systemImage: "arrow.up.right.square")
-                        .font(.caption)
+                if let resolvedURL {
+                    Link(destination: resolvedURL) {
+                        Label(url.replacingOccurrences(of: "https://", with: ""), systemImage: "arrow.up.right.square")
+                            .font(.caption)
+                    }
                 }
             }
             Spacer()
-            Link(destination: URL(string: url)!) {
-                Text("Abrir").font(.callout.weight(.semibold))
+            if let resolvedURL {
+                Link(destination: resolvedURL) {
+                    Text("Abrir").font(.callout.weight(.semibold))
+                }
+                .buttonStyle(.borderedProminent).tint(color).controlSize(.small)
             }
-            .buttonStyle(.borderedProminent).tint(color).controlSize(.small)
         }
         .padding(12)
         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let h = hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: "")
-        var rgb: UInt64 = 0; Scanner(string: h).scanHexInt64(&rgb)
-        self.init(.sRGB, red: Double((rgb >> 16) & 0xFF)/255, green: Double((rgb >> 8) & 0xFF)/255, blue: Double(rgb & 0xFF)/255, opacity: 1)
     }
 }
 

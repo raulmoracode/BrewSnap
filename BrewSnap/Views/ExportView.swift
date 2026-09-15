@@ -1,12 +1,19 @@
+// ExportView.swift
+// BrewSnap — Pantalla Export con 2 opciones: subir al repo o descargar local.
+
 import SwiftUI
 import UniformTypeIdentifiers
 
 struct ExportView: View {
+    // MARK: - Properties
+
     @Environment(AppState.self) private var appState
     @State private var jsonPreview: String = ""
     @State private var isUploading = false
     @State private var uploadMessage: String?
     @State private var uploadIsError = false
+
+    // MARK: - Body
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -164,6 +171,9 @@ struct ExportView: View {
         .task { if appState.snapshot == nil { await createSnapshot() } }
     }
 
+    // MARK: - Private Methods
+
+    /// Crea un snapshot fresco y actualiza el preview JSON.
     private func createSnapshot() async {
         uploadMessage = nil
         await appState.scan()
@@ -208,23 +218,5 @@ struct ExportView: View {
             uploadMessage = error.localizedDescription
             uploadIsError = true
         }
-    }
-}
-
-private struct StatCard: View {
-    let title: String; let value: String; let icon: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label(title, systemImage: icon).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-            Text(value).font(.callout.weight(.medium)).lineLimit(1)
-        }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let h = hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: "")
-        var rgb: UInt64 = 0; Scanner(string: h).scanHexInt64(&rgb)
-        self.init(.sRGB, red: Double((rgb >> 16) & 0xFF)/255, green: Double((rgb >> 8) & 0xFF)/255, blue: Double(rgb & 0xFF)/255, opacity: 1)
     }
 }

@@ -1,3 +1,6 @@
+// VersionHelper.swift
+// BrewSnap — Helpers para parsear versiones de brew y system info.
+
 import Foundation
 
 enum VersionHelper {

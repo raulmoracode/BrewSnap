@@ -1,3 +1,6 @@
+// BrewSnapApp.swift
+// BrewSnap — Entry point (WindowGroup + MenuBarExtra + Settings).
+
 import SwiftUI
 
 @main

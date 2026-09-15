@@ -1,8 +1,14 @@
+// AppState.swift
+// BrewSnap — Estado global observable (snapshot, perfiles, settings).
+
 import Foundation
 import Observation
 
 @Observable
 final class AppState {
+
+    // MARK: - Properties
+
     var snapshot: BrewSnapshot?
     var isScanning = false
     var lastError: String?
@@ -10,19 +16,38 @@ final class AppState {
     var selectedProfile: BrewProfile = .default
     var profiles: [BrewProfile] = [.default, .work, .personal]
 
-    // Settings (persisted via UserDefaults)
+    private let userDefaults: UserDefaults
+    private let keychain: KeychainService.Type
+
+    // MARK: - Initialization
+
+    /// - Parameters:
+    ///   - userDefaults: Almacenamiento para repoName/repoOwner (inyectado para testabilidad).
+    ///   - keychain: Servicio Keychain (inyectado).
+    init(userDefaults: UserDefaults = .standard, keychain: KeychainService.Type = KeychainService.self) {
+        self.userDefaults = userDefaults
+        self.keychain = keychain
+    }
+
+    // MARK: - Settings (persisted)
+
+    /// Token GitHub guardado en Keychain (inyectado).
     var githubToken: String {
-        get { (try? KeychainService.load()) ?? "" }
-        set { try? KeychainService.save(token: newValue) }
+        get { (try? keychain.load()) ?? "" }
+        set { try? keychain.save(token: newValue) }
     }
+
     var repoName: String {
-        get { UserDefaults.standard.string(forKey: "repoName") ?? "brewsnap" }
-        set { UserDefaults.standard.set(newValue, forKey: "repoName") }
+        get { userDefaults.string(forKey: "repoName") ?? "brewsnap" }
+        set { userDefaults.set(newValue, forKey: "repoName") }
     }
+
     var repoOwner: String {
-        get { UserDefaults.standard.string(forKey: "repoOwner") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "repoOwner") }
+        get { userDefaults.string(forKey: "repoOwner") ?? "" }
+        set { userDefaults.set(newValue, forKey: "repoOwner") }
     }
+
+    // MARK: - Types
 
     enum SyncStatus: Equatable {
         case idle
@@ -32,11 +57,14 @@ final class AppState {
         case error(String)
     }
 
+    // MARK: - Public Methods
+
+    /// Escanea Homebrew con timeout global de 30s.
     func scan() async {
         isScanning = true
         defer { isScanning = false }
+
         do {
-            // Timeout global de 30s para no quedar en "Escaneando…" infinito
             let snap = try await withThrowingTaskGroup(of: BrewSnapshot.self) { group in
                 group.addTask { try await SnapshotService.generate() }
                 group.addTask {

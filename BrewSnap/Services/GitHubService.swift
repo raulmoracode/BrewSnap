@@ -1,5 +1,11 @@
+// GitHubService.swift
+// BrewSnap — Cliente GitHub API v3 para crear repos y sincronizar snapshots.
+
 import Foundation
 
+// MARK: - Error
+
+/// Errores de GitHubService.
 enum GitHubError: LocalizedError {
     case invalidToken
     case repoExists
@@ -9,97 +15,157 @@ enum GitHubError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidToken: return "Token de GitHub inválido o sin permisos"
-        case .repoExists: return "El repositorio ya existe"
-        case .network(let msg): return "Error de red: \(msg)"
-        case .api(let msg, let code): return "GitHub API error (\(code)): \(msg)"
-        case .encodingFailed: return "Failed to encode request"
+        case .invalidToken:
+            return "Token de GitHub inválido o sin permisos"
+        case .repoExists:
+            return "El repositorio ya existe"
+        case .network(let message):
+            return "Error de red: \(message)"
+        case .api(let message, let code):
+            return "GitHub API error (\(code)): \(message)"
+        case .encodingFailed:
+            return "Failed to encode request"
         }
     }
 }
 
+// MARK: - Model
+
+private struct CreateRepoRequest: Codable {
+    let name: String
+    let isPrivate: Bool
+    let description: String
+    let autoInit: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case isPrivate = "private"
+        case description
+        case autoInit = "auto_init"
+    }
+}
+
+private struct PutFileRequest: Codable {
+    let message: String
+    let content: String
+    let sha: String?
+}
+
+// MARK: - Service
+
+/// Cliente para GitHub API v3 (URLSession directo, sin Octokit).
 final class GitHubService: Sendable {
+
+    // MARK: - Properties
+
     private let token: String
-    private let baseURL = URL(string: "https://api.github.com")!
+    private let baseURL: URL = {
+        guard let url = URL(string: "https://api.github.com") else {
+            fatalError("Invalid GitHub base URL")
+        }
+        return url
+    }()
+
+    // MARK: - Initialization
 
     init(token: String) {
         self.token = token
     }
 
-    private func request(path: String, method: String = "GET", body: Data? = nil) -> URLRequest {
-        var req = URLRequest(url: baseURL.appendingPathComponent(path))
-        req.httpMethod = method
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        req.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
-        if let body { req.httpBody = body; req.setValue("application/json", forHTTPHeaderField: "Content-Type") }
-        return req
+    // MARK: - Private Helpers
+
+    private func makeRequest(path: String, method: String = "GET", body: Data? = nil) -> URLRequest {
+        var request = URLRequest(url: baseURL.appendingPathComponent(path))
+        request.httpMethod = method
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        if let body {
+            request.httpBody = body
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+        return request
     }
 
+    // MARK: - Public API
+
+    /// Valida el token y devuelve el login del usuario.
     func validateToken() async throws -> String {
-        let (data, response) = try await URLSession.shared.data(for: request(path: "/user"))
-        guard let http = response as? HTTPURLResponse else { throw GitHubError.network("No HTTP response") }
-        guard http.statusCode == 200 else { throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", http.statusCode) }
+        let (data, response) = try await URLSession.shared.data(for: makeRequest(path: "/user"))
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GitHubError.network("No HTTP response")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", httpResponse.statusCode)
+        }
         struct User: Decodable { let login: String }
         let user = try JSONDecoder().decode(User.self, from: data)
         return user.login
     }
 
+    /// Crea un repositorio privado.
     func createPrivateRepo(name: String = "brewsnap", description: String = "BrewSnap — Homebrew snapshot backups") async throws {
-        let body: [String: Any] = ["name": name, "private": true, "description": description, "auto_init": true]
-        let data = try JSONSerialization.data(withJSONObject: body)
-        let (respData, response) = try await URLSession.shared.data(for: request(path: "/user/repos", method: "POST", body: data))
-        guard let http = response as? HTTPURLResponse else { throw GitHubError.network("No HTTP response") }
-        if http.statusCode == 422 { throw GitHubError.repoExists }
-        guard (200...299).contains(http.statusCode) else {
-            throw GitHubError.api(String(data: respData, encoding: .utf8) ?? "", http.statusCode)
+        let payload = CreateRepoRequest(name: name, isPrivate: true, description: description, autoInit: true)
+        let data = try JSONEncoder().encode(payload)
+        let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/user/repos", method: "POST", body: data))
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GitHubError.network("No HTTP response")
+        }
+        if httpResponse.statusCode == 422 { throw GitHubError.repoExists }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw GitHubError.api(String(data: responseData, encoding: .utf8) ?? "", httpResponse.statusCode)
         }
     }
 
-    /// Fetch file content via GET /repos/{owner}/{repo}/contents/{path}
+    /// Obtiene un archivo del repo (devuelve SHA y contenido decodificado).
     func fetchFile(owner: String, repo: String, path: String) async throws -> (sha: String, content: String) {
-        let (data, response) = try await URLSession.shared.data(for: request(path: "/repos/\(owner)/\(repo)/contents/\(path)"))
-        guard let http = response as? HTTPURLResponse else { throw GitHubError.network("No HTTP response") }
-        guard http.statusCode == 200 else { throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", http.statusCode) }
+        let (data, response) = try await URLSession.shared.data(for: makeRequest(path: "/repos/\(owner)/\(repo)/contents/\(path)"))
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GitHubError.network("No HTTP response")
+        }
+        guard httpResponse.statusCode == 200 else {
+            throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", httpResponse.statusCode)
+        }
         struct Content: Decodable { let sha: String; let content: String; let encoding: String }
         let decoded = try JSONDecoder().decode(Content.self, from: data)
         let clean = decoded.content.replacingOccurrences(of: "\n", with: "")
-        guard let decodedData = Data(base64Encoded: clean), let str = String(data: decodedData, encoding: .utf8) else {
+        guard let decodedData = Data(base64Encoded: clean),
+              let string = String(data: decodedData, encoding: .utf8) else {
             throw GitHubError.encodingFailed
         }
-        return (decoded.sha, str)
+        return (decoded.sha, string)
     }
 
-    /// PUT /repos/{owner}/{repo}/contents/{path}
+    /// Crea o actualiza un archivo vía PUT /contents.
     @discardableResult
     func putFile(owner: String, repo: String, path: String, content: String, message: String, sha: String? = nil) async throws -> String {
         let base64 = Data(content.utf8).base64EncodedString()
-        var body: [String: Any] = ["message": message, "content": base64]
-        if let sha { body["sha"] = sha }
-        let data = try JSONSerialization.data(withJSONObject: body)
-        let (respData, response) = try await URLSession.shared.data(for: request(path: "/repos/\(owner)/\(repo)/contents/\(path)", method: "PUT", body: data))
-        guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
+        let payload = PutFileRequest(message: message, content: base64, sha: sha)
+        let data = try JSONEncoder().encode(payload)
+        let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/repos/\(owner)/\(repo)/contents/\(path)", method: "PUT", body: data))
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             let code = (response as? HTTPURLResponse)?.statusCode ?? -1
-            throw GitHubError.api(String(data: respData, encoding: .utf8) ?? "", code)
+            throw GitHubError.api(String(data: responseData, encoding: .utf8) ?? "", code)
         }
         struct PutResponse: Decodable { struct Content: Decodable { let sha: String }; let content: Content? }
-        if let decoded = try? JSONDecoder().decode(PutResponse.self, from: respData), let sha = decoded.content?.sha {
-            return sha
+        if let decoded = try? JSONDecoder().decode(PutResponse.self, from: responseData),
+           let newSHA = decoded.content?.sha {
+            return newSHA
         }
         return ""
     }
 
+    /// Sube un snapshot como `{profile}.json` si hay cambios.
     func commitSnapshot(owner: String, repo: String, snapshot: BrewSnapshot, profile: String = "brewsnap") async throws {
         let json = try snapshot.toPrettyJSON()
         let path = "\(profile).json"
-        var existingSHA: String? = nil
+        var existingSHA: String?
+
         if let existing = try? await fetchFile(owner: owner, repo: repo, path: path) {
             existingSHA = existing.sha
-            if existing.content == json {
-                // No changes
-                return
-            }
+            guard existing.content != json else { return } // Already up to date
         }
+
         let message = "snapshot: \(snapshot.formulaeCount) formulae, \(snapshot.casksCount) casks — \(ISO8601DateFormatter().string(from: snapshot.createdAt))"
         try await putFile(owner: owner, repo: repo, path: path, content: json, message: message, sha: existingSHA)
     }

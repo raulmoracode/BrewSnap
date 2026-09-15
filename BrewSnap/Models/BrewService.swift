@@ -1,3 +1,6 @@
+// BrewService.swift
+// BrewSnap — Modelo de servicio Homebrew.
+
 import Foundation
 
 struct BrewService: Codable, Identifiable, Hashable, Sendable {

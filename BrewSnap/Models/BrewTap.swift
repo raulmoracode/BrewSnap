@@ -1,3 +1,6 @@
+// BrewTap.swift
+// BrewSnap — Modelo de tap Homebrew.
+
 import Foundation
 
 struct BrewTap: Codable, Identifiable, Hashable, Sendable {

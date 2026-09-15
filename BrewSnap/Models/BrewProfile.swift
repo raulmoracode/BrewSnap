@@ -1,3 +1,6 @@
+// BrewProfile.swift
+// BrewSnap — Modelo de perfil (work, personal, etc.).
+
 import Foundation
 
 struct BrewProfile: Codable, Identifiable, Hashable, Sendable {

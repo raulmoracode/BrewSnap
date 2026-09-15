@@ -1,3 +1,6 @@
+// ShellExecutor.swift
+// BrewSnap — Wrapper para Process (ejecuta brew/git de forma segura).
+
 import Foundation
 
 enum ShellError: LocalizedError, Sendable {

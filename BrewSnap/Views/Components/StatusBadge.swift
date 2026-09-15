@@ -1,3 +1,6 @@
+// StatusBadge.swift
+// BrewSnap — Badge de estado sync.
+
 import SwiftUI
 
 struct StatusBadge: View {

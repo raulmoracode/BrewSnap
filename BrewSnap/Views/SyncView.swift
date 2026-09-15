@@ -1,3 +1,6 @@
+// SyncView.swift
+// BrewSnap — Sincronización con GitHub.
+
 import SwiftUI
 
 struct SyncView: View {

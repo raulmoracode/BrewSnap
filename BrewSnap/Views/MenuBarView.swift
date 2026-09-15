@@ -1,3 +1,6 @@
+// MenuBarView.swift
+// BrewSnap — Menu bar extra (desplegable).
+
 import SwiftUI
 
 struct MenuBarView: View {
@@ -76,13 +79,5 @@ struct MenuBarView: View {
         }
         .padding(12)
         .frame(width: 220)
-    }
-}
-
-private extension Color {
-    init(hex: String) {
-        let h = hex.replacingOccurrences(of: "#", with: "")
-        var rgb: UInt64 = 0; Scanner(string: h).scanHexInt64(&rgb)
-        self.init(.sRGB, red: Double((rgb >> 16) & 0xFF)/255, green: Double((rgb >> 8) & 0xFF)/255, blue: Double(rgb & 0xFF)/255, opacity: 1)
     }
 }

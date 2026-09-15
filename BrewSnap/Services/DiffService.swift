@@ -1,3 +1,6 @@
+// DiffService.swift
+// BrewSnap — Comparación entre snapshots.
+
 import Foundation
 
 struct SnapshotDiff: Sendable {

@@ -1,3 +1,6 @@
+// SettingsView.swift
+// BrewSnap — Configuración GitHub token y repo.
+
 import SwiftUI
 
 struct SettingsView: View {
@@ -31,8 +34,10 @@ struct SettingsView: View {
                         Task { await validate() }
                     } label: { Label(isValidating ? "Validando…" : "Validar token", systemImage: "checkmark.shield.fill") }
                     .disabled(tokenInput.isEmpty || isValidating)
-                    Link("Crear token en GitHub", destination: URL(string: "https://github.com/settings/tokens/new?scopes=repo&description=BrewSnap")!)
-                        .font(.caption)
+                    if let tokenURL = URL(string: "https://github.com/settings/tokens/new?scopes=repo&description=BrewSnap") {
+                        Link("Crear token en GitHub", destination: tokenURL)
+                            .font(.caption)
+                    }
                 }
                 if let msg = validationMessage {
                     Text(msg).font(.caption).foregroundStyle(msg.contains("✓") ? .green : .red)
@@ -42,8 +47,12 @@ struct SettingsView: View {
             Section("General") {
                 LabeledContent("Bundle ID", value: "com.raulmorasanchez.BrewSnap")
                 LabeledContent("Versión", value: "1.0.0 (MVP)")
-                Link("Repositorio brewsnap", destination: URL(string: "https://github.com/raulmoracode/brewsnap")!)
-                Link("Homebrew tap", destination: URL(string: "https://github.com/raulmoracode/homebrew-tap")!)
+                if let repoURL = URL(string: "https://github.com/raulmoracode/brewsnap") {
+                    Link("Repositorio brewsnap", destination: repoURL)
+                }
+                if let tapURL = URL(string: "https://github.com/raulmoracode/homebrew-tap") {
+                    Link("Homebrew tap", destination: tapURL)
+                }
             }
 
             Section {

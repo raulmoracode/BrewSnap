@@ -1,3 +1,6 @@
+// SnapshotService.swift
+// BrewSnap — Generación y persistencia de snapshots.
+
 import Foundation
 
 enum SnapshotService {

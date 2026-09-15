@@ -1,3 +1,6 @@
+// BrewSnapshot.swift
+// BrewSnap — Modelo principal del snapshot JSON (versionado, Codable).
+
 import Foundation
 
 struct BrewSnapshot: Codable, Sendable {

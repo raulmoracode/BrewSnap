@@ -1,3 +1,6 @@
+// JSONEncoder+Pretty.swift
+// BrewSnap — Encoder JSON legible para snapshots.
+
 import Foundation
 
 extension JSONEncoder {
