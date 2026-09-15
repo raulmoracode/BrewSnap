@@ -43,7 +43,6 @@ struct MainView: View {
                         Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
                     }
                 }
-                Divider()
                 HStack(spacing: 2) {
                     Text("by").font(.caption2).foregroundStyle(.secondary)
                     if let url = URL(string: "https://raulmoracode.com") {
