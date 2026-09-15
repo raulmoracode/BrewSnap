@@ -2,9 +2,10 @@ import SwiftUI
 
 struct MainView: View {
     @Environment(AppState.self) private var appState
-    @State private var selectedTab: Tab = .export
+    @State private var selectedTab: Tab = .importTab
 
     enum Tab: String, CaseIterable {
+        case importTab = "Import"
         case export = "Export"
         case packages = "Packages"
         case sync = "Sync"
@@ -13,6 +14,7 @@ struct MainView: View {
         case settings = "Settings"
         var icon: String {
             switch self {
+            case .importTab: return "square.and.arrow.down"
             case .export: return "square.and.arrow.up"
             case .packages: return "shippingbox.fill"
             case .sync: return "arrow.triangle.2.circlepath"
@@ -27,6 +29,7 @@ struct MainView: View {
         NavigationSplitView {
             List(selection: $selectedTab) {
                 Section("Principal") {
+                    Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
                     Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
                     Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
                     Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
@@ -41,6 +44,7 @@ struct MainView: View {
         } detail: {
             Group {
                 switch selectedTab {
+                case .importTab: ImportView()
                 case .export: ExportView()
                 case .packages: PackagesView()
                 case .sync: SyncView()
