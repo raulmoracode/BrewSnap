@@ -47,79 +47,64 @@ struct ExportView: View {
                     .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
                 }
 
-                // Zona 2 opciones — parecida a Import
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
-                        .foregroundStyle(Color.secondary.opacity(0.25))
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(NSColor.quaternaryLabelColor).opacity(0.08))
-                        )
-                    HStack(spacing: 16) {
-                        // Opción 1: Subir al repo
-                        VStack(spacing: 10) {
-                            Image(systemName: "arrow.up.circle.fill")
-                                .font(.system(size: 32))
-                                .foregroundStyle(Color(hex: "#1D3557"))
-                            Text("Subir al repo")
-                                .font(.headline)
-                            Text("Sincroniza el JSON a tu repo privado en GitHub")
-                                .font(.caption).foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .frame(height: 32)
-                            Button {
-                                Task { await uploadToRepo() }
-                            } label: {
-                                Label(isUploading ? "Subiendo…" : "Subir al repo", systemImage: "arrow.triangle.2.circlepath")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(Color(hex: "#1D3557"))
-                            .disabled(snap.formulae.isEmpty && snap.casks.isEmpty || isUploading || appState.githubToken.isEmpty)
-                            if appState.githubToken.isEmpty {
-                                Text("Configura tu token en Settings")
-                                    .font(.caption2).foregroundStyle(.orange)
-                            } else if !appState.repoOwner.isEmpty {
-                                Text("\(appState.repoOwner)/\(appState.repoName)")
-                                    .font(.caption2.monospaced()).foregroundStyle(.secondary)
-                            }
+                HStack(spacing: 16) {
+                    // Opción 1: Subir al repo
+                    VStack(spacing: 10) {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color(hex: "#1D3557"))
+                        Text("Subir al repo")
+                            .font(.headline)
+                        Text("Sincroniza el JSON a tu repo privado en GitHub")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .frame(height: 32)
+                        Button {
+                            Task { await uploadToRepo() }
+                        } label: {
+                            Label(isUploading ? "Subiendo…" : "Subir al repo", systemImage: "arrow.triangle.2.circlepath")
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(16)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
-
-                        // Separador
-                        Rectangle().fill(Color.secondary.opacity(0.15)).frame(width: 1)
-
-                        // Opción 2: Descargar local
-                        VStack(spacing: 10) {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .font(.system(size: 32))
-                                .foregroundStyle(Color(hex: "#FBB040"))
-                            Text("Descargar local")
-                                .font(.headline)
-                            Text("Guarda el JSON en tu Mac")
-                                .font(.caption).foregroundStyle(.secondary)
-                                .frame(height: 32)
-                            Button {
-                                saveJSON()
-                            } label: {
-                                Label("Descargar JSON", systemImage: "arrow.down.doc.fill")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(Color(hex: "#FBB040"))
-                            Text(snap.formulaeCount + snap.casksCount > 0 ? "\(appState.selectedProfile.fileName)" : " ")
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(hex: "#1D3557"))
+                        .disabled(snap.formulae.isEmpty && snap.casks.isEmpty || isUploading || appState.githubToken.isEmpty)
+                        if appState.githubToken.isEmpty {
+                            Text("Configura tu token en Settings")
+                                .font(.caption2).foregroundStyle(.orange)
+                        } else if !appState.repoOwner.isEmpty {
+                            Text("\(appState.repoOwner)/\(appState.repoName)")
                                 .font(.caption2.monospaced()).foregroundStyle(.secondary)
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding(16)
-                        .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
                     }
+                    .frame(maxWidth: .infinity)
                     .padding(16)
+                    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
+
+                    // Opción 2: Descargar local
+                    VStack(spacing: 10) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Color(hex: "#FBB040"))
+                        Text("Descargar local")
+                            .font(.headline)
+                        Text("Guarda el JSON en tu Mac")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .frame(height: 32)
+                        Button {
+                            saveJSON()
+                        } label: {
+                            Label("Descargar JSON", systemImage: "arrow.down.doc.fill")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color(hex: "#FBB040"))
+                        Text(snap.formulaeCount + snap.casksCount > 0 ? "\(appState.selectedProfile.fileName)" : " ")
+                            .font(.caption2.monospaced()).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(16)
+                    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
                 }
-                .frame(height: 220)
 
                 if let msg = uploadMessage {
                     Label(msg, systemImage: uploadIsError ? "xmark.circle.fill" : "checkmark.circle.fill")
