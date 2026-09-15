@@ -107,14 +107,18 @@ struct PackagesView: View {
             // COL 1: All
             VStack(alignment: .leading, spacing: 0) {
                 ColumnHeader(title: "All", count: allItems.count, icon: "shippingbox.fill", color: Color(hex: "#1D3557"))
-                if allItems.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                } else {
-                    List(allItems) { item in
-                        PackageRow(name: item.name, version: item.version, isPinned: item.isPinned)
+                Group {
+                    if allItems.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List(allItems) { item in
+                            PackageRow(name: item.name, version: item.version, isPinned: item.isPinned)
+                        }
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
+                .frame(height: 420)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
@@ -123,14 +127,18 @@ struct PackagesView: View {
             // COL 2: Formulae
             VStack(alignment: .leading, spacing: 0) {
                 ColumnHeader(title: "Formulae", count: filteredFormulae.count, icon: "cube.fill", color: .orange)
-                if filteredFormulae.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                } else {
-                    List(filteredFormulae, id: \.name) { f in
-                        PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)
+                Group {
+                    if filteredFormulae.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List(filteredFormulae, id: \.name) { f in
+                            PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)
+                        }
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
+                .frame(height: 420)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
@@ -139,14 +147,18 @@ struct PackagesView: View {
             // COL 3: Casks
             VStack(alignment: .leading, spacing: 0) {
                 ColumnHeader(title: "Casks", count: filteredCasks.count, icon: "app.badge.fill", color: .purple)
-                if filteredCasks.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                } else {
-                    List(filteredCasks, id: \.name) { c in
-                        PackageRow(name: c.name, version: c.version, tap: c.tap)
+                Group {
+                    if filteredCasks.isEmpty {
+                        ContentUnavailableView.search(text: searchText)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        List(filteredCasks, id: \.name) { c in
+                            PackageRow(name: c.name, version: c.version, tap: c.tap)
+                        }
+                        .listStyle(.plain)
                     }
-                    .listStyle(.plain)
                 }
+                .frame(height: 420)
             }
             .frame(maxWidth: .infinity)
             .background(.background, in: RoundedRectangle(cornerRadius: 12))
