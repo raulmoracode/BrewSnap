@@ -67,7 +67,6 @@ struct MainView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 12).padding(.vertical, 8)
-                .contentShape(Rectangle()).handCursor()
                 Divider()
                 HStack(spacing: 8) {
                     Image(systemName: "shippingbox.fill")
