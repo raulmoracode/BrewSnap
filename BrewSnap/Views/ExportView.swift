@@ -10,26 +10,15 @@ struct ExportView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Export").font(.title2.bold())
-                    if let snap = appState.snapshot {
-                        Text("\(snap.formulaeCount) formulae · \(snap.casksCount) casks · \(snap.taps.count) taps")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    } else {
-                        Text("Crea tu snapshot y elige cómo exportarlo")
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Export").font(.title2.bold())
+                if let snap = appState.snapshot {
+                    Text("\(snap.formulaeCount) formulae · \(snap.casksCount) casks · \(snap.taps.count) taps")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                } else {
+                    Text("Elige cómo exportar tu snapshot")
+                        .font(.subheadline).foregroundStyle(.secondary)
                 }
-                Spacer()
-                Button {
-                    Task { await createSnapshot() }
-                } label: {
-                    Label(appState.isScanning ? "Escaneando…" : "Create Snapshot", systemImage: "camera.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(Color(hex: "#FBB040"))
-                .disabled(appState.isScanning)
             }
 
             if let err = appState.lastError {
@@ -39,23 +28,14 @@ struct ExportView: View {
             }
 
             if let snap = appState.snapshot {
-                HStack(spacing: 12) {
-                    StatCard(title: "Host", value: snap.hostname, icon: "laptopcomputer")
-                    StatCard(title: "macOS", value: snap.macOS, icon: "apple.logo")
-                    StatCard(title: "Arch", value: snap.arch, icon: "cpu")
-                    StatCard(title: "Homebrew", value: snap.homebrew, icon: "shippingbox")
-                }
-
                 if snap.formulae.isEmpty && snap.casks.isEmpty && snap.taps.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
                         Label("No se detectaron paquetes — verifica brew", systemImage: "exclamationmark.octagon.fill")
                             .foregroundStyle(.orange).font(.callout.weight(.semibold))
                         Text("brew: \(ShellExecutor.brewExecutable()) · existe: \(FileManager.default.isExecutableFile(atPath: ShellExecutor.brewExecutable()) ? "sí" : "no")")
                             .font(.caption.monospaced()).foregroundStyle(.secondary)
-                        Text("Ejecuta en Terminal: brew list --formula --versions | wc -l  (debería dar 60 en tu máquina)")
+                        Text("Ejecuta en Terminal: brew list --formula --versions | wc -l")
                             .font(.caption).foregroundStyle(.secondary)
-                        Button("Reintentar") { Task { await createSnapshot() } }
-                            .buttonStyle(.bordered).controlSize(.small)
                     }
                     .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
                 }
@@ -141,36 +121,22 @@ struct ExportView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .background((uploadIsError ? Color.red : Color.green).opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
                 }
-
-                TabView {
-                    List(snap.formulae, id: \.name) { f in
-                        PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)
-                    }.tabItem { Label("Formulae (\(snap.formulae.count))", systemImage: "cube") }
-
-                    List(snap.casks, id: \.name) { c in
-                        PackageRow(name: c.name, version: c.version, tap: c.tap)
-                    }.tabItem { Label("Casks (\(snap.casks.count))", systemImage: "app.badge") }
-
-                    List(snap.taps, id: \.name) { t in
-                        HStack {
-                            Text(t.name).font(.system(.body, design: .monospaced))
-                            Spacer()
-                            if let remote = t.remote { Text(remote).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
-                        }
-                    }.tabItem { Label("Taps (\(snap.taps.count))", systemImage: "arrow.triangle.branch") }
-                }
-                .frame(height: 220)
             } else {
-                // Sin snapshot — zona parecida a Import vacía
+                // Sin snapshot — escaneando automáticamente
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
                         .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
                         .foregroundStyle(Color.secondary.opacity(0.25))
                         .background(RoundedRectangle(cornerRadius: 16).fill(Color(NSColor.quaternaryLabelColor).opacity(0.08)))
                     VStack(spacing: 12) {
-                        Image(systemName: "camera.fill").font(.system(size: 36)).foregroundStyle(.secondary)
-                        Text("Aún no hay snapshot").font(.headline)
-                        Text("Pulsa Create Snapshot para escanear tu entorno Homebrew")
+                        if appState.isScanning {
+                            ProgressView().scaleEffect(1.2)
+                            Text("Escaneando…").font(.headline)
+                        } else {
+                            Image(systemName: "shippingbox.fill").font(.system(size: 36)).foregroundStyle(.secondary)
+                            Text("Preparando snapshot…").font(.headline)
+                        }
+                        Text("Se genera automáticamente")
                             .font(.subheadline).foregroundStyle(.secondary)
                     }.padding(32)
                 }

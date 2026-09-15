@@ -27,18 +27,43 @@ struct MainView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $selectedTab) {
-                Section("Principal") {
-                    Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
-                    Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
-                    Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
-                    Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
-                    Label(Tab.profiles.rawValue, systemImage: Tab.profiles.icon).tag(Tab.profiles)
+            VStack(spacing: 0) {
+                List(selection: $selectedTab) {
+                    Section("Principal") {
+                        Label(Tab.importTab.rawValue, systemImage: Tab.importTab.icon).tag(Tab.importTab)
+                        Label(Tab.export.rawValue, systemImage: Tab.export.icon).tag(Tab.export)
+                        Label(Tab.packages.rawValue, systemImage: Tab.packages.icon).tag(Tab.packages)
+                        Label(Tab.sync.rawValue, systemImage: Tab.sync.icon).tag(Tab.sync)
+                        Label(Tab.profiles.rawValue, systemImage: Tab.profiles.icon).tag(Tab.profiles)
+                    }
+                    Section("Proyecto") {
+                        Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
+                        Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
+                    }
                 }
-                Section("Proyecto") {
-                    Label(Tab.repository.rawValue, systemImage: Tab.repository.icon).tag(Tab.repository)
-                    Label(Tab.settings.rawValue, systemImage: Tab.settings.icon).tag(Tab.settings)
+                Divider()
+                HStack(spacing: 8) {
+                    Image(systemName: "shippingbox.fill")
+                        .foregroundStyle(Color(hex: "#FBB040"))
+                        .font(.caption)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Homebrew")
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+                        Text(appState.snapshot?.homebrew ?? "—")
+                            .font(.caption.monospaced()).lineLimit(1)
+                    }
+                    Spacer()
+                    if appState.isScanning {
+                        ProgressView().scaleEffect(0.6).frame(width: 12, height: 12)
+                    } else if let snap = appState.snapshot {
+                        Text("\(snap.formulaeCount + snap.casksCount)")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(.quaternary, in: Capsule())
+                    }
                 }
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .background(.quaternary.opacity(0.35))
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
@@ -57,5 +82,13 @@ struct MainView: View {
         }
         .navigationTitle("BrewSnap")
         .toolbarBackgroundVisibility(.visible, for: .windowToolbar)
+    }
+}
+
+private extension Color {
+    init(hex: String) {
+        let h = hex.trimmingCharacters(in: .whitespacesAndNewlines).replacingOccurrences(of: "#", with: "")
+        var rgb: UInt64 = 0; Scanner(string: h).scanHexInt64(&rgb)
+        self.init(.sRGB, red: Double((rgb >> 16) & 0xFF)/255, green: Double((rgb >> 8) & 0xFF)/255, blue: Double(rgb & 0xFF)/255, opacity: 1)
     }
 }
