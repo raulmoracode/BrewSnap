@@ -25,16 +25,42 @@ struct MenuBarView: View {
                 Task { await appState.scan() }
             } label: {
                 Label(appState.isScanning ? "Escaneando…" : "Create Snapshot", systemImage: "camera.fill")
-            }.disabled(appState.isScanning)
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "#FBB040"))
+            .controlSize(.regular)
+            .frame(maxWidth: .infinity)
+            .disabled(appState.isScanning)
 
             Button {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                 NSApp.activate(ignoringOtherApps: true)
-            } label: { Label("Abrir BrewSnap…", systemImage: "arrow.up.left.and.arrow.down.right") }
+                // Abre la ventana principal si está cerrada
+                if let window = NSApp.windows.first(where: { $0.canBecomeKey }) {
+                    window.makeKeyAndOrderFront(nil)
+                } else {
+                    NSApp.sendAction(Selector(("showWindow:")), to: nil, from: nil)
+                }
+            } label: {
+                Label("Abrir BrewSnap…", systemImage: "arrow.up.left.and.arrow.down.right")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
+            .frame(maxWidth: .infinity)
 
             Divider()
 
-            Button("Salir") { NSApplication.shared.terminate(nil) }
+            Button {
+                NSApplication.shared.terminate(nil)
+            } label: {
+                Label("Salir", systemImage: "power")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.red)
+            .controlSize(.regular)
+            .frame(maxWidth: .infinity)
         }
         .padding(12)
         .frame(width: 280)
