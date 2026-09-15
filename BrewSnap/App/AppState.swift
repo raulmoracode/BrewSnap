@@ -36,9 +36,24 @@ final class AppState {
         isScanning = true
         defer { isScanning = false }
         do {
-            let snap = try await SnapshotService.generate()
+            // Timeout global de 30s para no quedar en "Escaneando…" infinito
+            let snap = try await withThrowingTaskGroup(of: BrewSnapshot.self) { group in
+                group.addTask { try await SnapshotService.generate() }
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 30_000_000_000)
+                    throw CancellationError()
+                }
+                guard let result = try await group.next() else { throw CancellationError() }
+                group.cancelAll()
+                return result
+            }
             snapshot = snap
             lastError = nil
+            if snap.formulae.isEmpty && snap.casks.isEmpty {
+                lastError = "Snapshot vacío — verifica que brew funciona (brew list --formula --versions)"
+            }
+        } catch is CancellationError {
+            lastError = "Timeout escaneando Homebrew (>30s) — reintenta"
         } catch {
             lastError = error.localizedDescription
         }

@@ -16,23 +16,48 @@ final class HomebrewService: Sendable {
     // MARK: - Scan
 
     func scan() async throws -> BrewSnapshot {
-        async let formulaeTask = fetchFormulae()
-        async let casksTask = fetchCasks()
-        async let tapsTask = fetchTaps()
-        async let servicesTask = fetchServices()
-        async let pinnedTask = fetchPinned()
-        async let diskUsageTask = fetchDiskUsage()
-        async let sysInfoTask = VersionHelper.systemInfo()
+        // NOTA: brew no soporta múltiples procesos concurrentes (usa lock file).
+        // Ejecutamos secuencialmente para evitar "escaneando" infinito por deadlock.
+        print("[BrewSnap] scan start")
+        let t0 = Date()
 
-        let (formulaeRaw, casksRaw, taps, services, pinned, diskUsage, sysInfo) = await (
-            (try? formulaeTask) ?? [],
-            (try? casksTask) ?? [],
-            (try? tapsTask) ?? [],
-            (try? servicesTask) ?? [],
-            (try? pinnedTask) ?? Set<String>(),
-            (try? diskUsageTask) ?? nil,
-            sysInfoTask
-        )
+        // Helper con timeout de 15s por tarea para no colgar UI
+        func withTimeout<T: Sendable>(_ label: String, seconds: Double = 12, _ work: @escaping @Sendable () async throws -> T, fallback: T) async -> T {
+            do {
+                return try await withThrowingTaskGroup(of: T.self) { group in
+                    group.addTask { try await work() }
+                    group.addTask {
+                        try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                        throw CancellationError()
+                    }
+                    guard let first = try await group.next() else { return fallback }
+                    group.cancelAll()
+                    return first
+                }
+            } catch {
+                print("[BrewSnap] timeout/error in \(label): \(error)")
+                return fallback
+            }
+        }
+
+        let sysInfo = await withTimeout("systemInfo", seconds: 5, { await VersionHelper.systemInfo() }, fallback: (hostname: Host.current().localizedName ?? "unknown", macOS: "15.0", arch: "arm64", homebrew: "unknown"))
+
+        let formulaeRaw: [(name: String, version: String)] = await withTimeout("formulae", seconds: 12, { try await self.fetchFormulae() }, fallback: [])
+        print("[BrewSnap] formulae \(formulaeRaw.count) en \(String(format:"%.1f", Date().timeIntervalSince(t0)))s")
+
+        let casksRaw: [(name: String, version: String)] = await withTimeout("casks", seconds: 12, { try await self.fetchCasks() }, fallback: [])
+        print("[BrewSnap] casks \(casksRaw.count) en \(String(format:"%.1f", Date().timeIntervalSince(t0)))s")
+
+        let taps: [BrewTap] = await withTimeout("taps", seconds: 15, { try await self.fetchTaps() }, fallback: [])
+        print("[BrewSnap] taps \(taps.count) en \(String(format:"%.1f", Date().timeIntervalSince(t0)))s")
+
+        let services: [BrewService] = await withTimeout("services", seconds: 8, { try await self.fetchServices() }, fallback: [])
+        print("[BrewSnap] services \(services.count) en \(String(format:"%.1f", Date().timeIntervalSince(t0)))s")
+
+        let pinned: Set<String> = await withTimeout("pinned", seconds: 5, { try await self.fetchPinned() }, fallback: [])
+        let diskUsage: String? = await withTimeout("diskUsage", seconds: 5, { try await self.fetchDiskUsage() }, fallback: nil)
+
+        print("[BrewSnap] scan done \(String(format:"%.1f", Date().timeIntervalSince(t0)))s")
 
         let formulae: [BrewFormula] = formulaeRaw.map { item in
             BrewFormula(
@@ -117,22 +142,8 @@ final class HomebrewService: Sendable {
             print("[BrewSnap] fetchTaps: 0 taps (brew=\(brew))")
             return []
         }
-        var detailed: [BrewTap] = []
-        for name in names {
-            var remote: String? = nil
-            if let r = try? await ShellExecutor.run(brew, args: ["tap-info", "--json", name]),
-               let data = r.stdout.data(using: .utf8),
-               let arr = try? JSONDecoder().decode([[String: AnyCodable]].self, from: data),
-               let v = arr.first?["remote"]?.value as? String {
-                remote = v
-            } else if let r2 = try? await ShellExecutor.runShell("\(brew) tap-info --json \(name) 2>/dev/null"),
-                      let data = r2.stdout.data(using: .utf8),
-                      let arr = try? JSONDecoder().decode([[String: AnyCodable]].self, from: data) {
-                remote = arr.first?["remote"]?.value as? String
-            }
-            detailed.append(BrewTap(name: name, remote: remote, trusted: true))
-        }
-        return detailed
+        // Fast path: no per-tap tap-info (ahorra 2-4s). Remote se puede enriquecer lazy si hace falta.
+        return names.map { BrewTap(name: $0, remote: nil, trusted: true) }
     }
 
     private func fetchServices() async throws -> [BrewService] {
@@ -147,8 +158,8 @@ final class HomebrewService: Sendable {
     private func fetchPinned() async throws -> Set<String> {
         let brew = brew()
         var out = ""
-        if let r = try? await ShellExecutor.run(brew, args: ["pin"]) { out = r.stdout }
-        else if let r2 = try? await ShellExecutor.runShell("\(brew) pin 2>/dev/null || brew pin 2>/dev/null || true") { out = r2.stdout }
+        if let r = try? await ShellExecutor.run(brew, args: ["list", "--pinned"]) { out = r.stdout }
+        else if let r2 = try? await ShellExecutor.runShell("\(brew) list --pinned 2>/dev/null || brew list --pinned 2>/dev/null || true") { out = r2.stdout }
         let pins = out.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         return Set(pins)
     }

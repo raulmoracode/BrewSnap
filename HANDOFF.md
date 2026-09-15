@@ -19,9 +19,44 @@
 | # | Fecha | Objetivo | Estado | Branch | Commit / Tag |
 |---|-------|----------|--------|--------|--------------|
 | 0 | 2026-09-15 | Bootstrap + MVP compilable (Fase 1: Snapshot, GitHub, Sync, Perfiles) | 🟢 Completada | `main` | 75a4768 |
-| 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completada | `main` | — |
+| 0.1 | 2026-09-15 | Hotfix: snapshot 0 formulae/casks (brew path + sandbox) | 🟢 Completada | `main` | 0f52476 |
+| 0.2 | 2026-09-15 | Fix escaneo infinito + Packages (All/Formulae/Casks) | 🟢 Completada | `main` | — |
 | 1 | — | Import en nueva máquina + Diff + dry-run | 🔜 Pendiente | — | — |
 | 2 | — | Menu bar + Historial + Auto-snapshot | 🔜 Pendiente | — | — |
+
+---
+
+## Iteración 0.2 — Fix escaneo infinito + Packages (All / Formulae / Casks)
+
+**Fecha:** 2026-09-15  
+**Estado:** 🟢 Completada  
+**Branch:** `main`  
+**Reportado:** "se queda en escaneando todo el rato" + petición nueva pestaña Packages con columnas All / Casks / Formulae  
+**Causa raíz escaneo:** `HomebrewService.scan()` en `BrewSnap/Services/BrewService.swift:18-61` lanzaba `async let` para 6 tareas brew en paralelo. `brew` usa lock file y no soporta múltiples procesos concurrentes → deadlock → `isScanning` nunca a `false` (ver `BrewSnap/App/AppState.swift:35-44`). Además `fetchTaps` hacía `brew tap-info --json` por cada tap (5× ~0.6s) y `fetchPinned` usaba `brew pin` (comando erróneo, debería ser `brew list --pinned`) → sumaba latencia.
+
+### Cambios realizados
+
+- [x] `BrewSnap/Services/BrewService.swift:20-60` — `scan()` ahora secuencial (no `async let`) con helper `withTimeout<T: Sendable>(label:seconds:work:fallback:)` (12s formulae/casks, 15s taps, 8s services, 5s pinned/diskUsage) que cancela con `withThrowingTaskGroup` + `Task.sleep`. Log `[BrewSnap] scan start/done` y tiempos por fase en Console.app. Evita deadlock y garantiza que `AppState.isScanning` vuelva a `false`.
+- [x] `BrewSnap/Services/BrewService.swift:133-147` — `fetchTaps` fast path: solo `brew tap` → `map { BrewTap(name:$0, remote:nil) }`, sin per-tap `tap-info` (ahorra 2-4s). `fetchPinned:158` fix `brew list --pinned` (antes `brew pin` daba `Usage: brew pin …` exit 1).
+- [x] `BrewSnap/App/AppState.swift:35-44` — `scan()` con timeout global 30s vía `withThrowingTaskGroup` + `CancellationError`, setea `lastError = "Timeout …"` si excede, y warning si snapshot vacío.
+- [x] Nuevo `BrewSnap/Views/PackagesView.swift:1-145` — 3 columnas lado a lado via `HStack`:
+  - **All** (fórmula+cask mezclados, orden alfabético, badge `F` naranja / `C` púrpura, soporta `pin`)
+  - **Formulae** (`List` filtrada `PackageRow`)
+  - **Casks** (`List` filtrada)
+  - Header con contadores `formulaeCount + casksCount`, búsqueda `searchText` filtra las 3 columnas en vivo, `ColumnHeader` con icono y conteo, `ContentUnavailableView.search` cuando filtro vacío. Toolbar `Rescan`.
+- [x] `BrewSnap/Views/MainView.swift:7-17` — `enum Tab` añade `case packages = "Packages"` (`shippingbox.fill`), orden `export → packages → sync → profiles`, switch integra `PackagesView()`.
+- [x] Auto-inclusión por `PBXFileSystemSynchronizedRootGroup` (`BrewSnap.xcodeproj/project.pbxproj:14` path=BrewSnap) — no requiere editar pbxproj al añadir `PackagesView.swift`.
+- [x] Verificación: `xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build` → **BUILD SUCCEEDED**; test secuencial `brew list --formula --versions` (0.3s), `--cask` (0.2s), `tap` (0.2s), `services list --json` (0.33s), `list --pinned` (0.1s), `du` (0.13s) → total ~1.5s (antes paralelo se colgaba).
+
+### Cómo probar
+
+```bash
+rm -rf ~/Library/Developer/Xcode/DerivedData/BrewSnap-*
+xcodebuild -project BrewSnap.xcodeproj -scheme BrewSnap -configuration Debug build
+open BrewSnap.xcodeproj  # Cmd+R
+```
+- Export → `Create Snapshot` ya no se queda en "Escaneando…", termina en ~2s y muestra `60 · 31 · 5`.
+- Nueva pestaña **Packages** → 3 columnas: **All** (91), **Formulae** (60), **Casks** (31). Usa la barra de búsqueda arriba para filtrar (ej. "git" filtra las 3 columnas).
 
 ---
 
@@ -65,8 +100,6 @@ En **Export** → `Create Snapshot` ahora debe mostrar `60 formulae · 31 casks 
 | `ENABLE_APP_SANDBOX = NO` | Mantener YES + entitlements `allow-unsigned-executable-memory` | Fase MVP necesita `Process` sin restricciones; sandbox se puede re-activar en Fase 3 con entitlements finos |
 
 ---
-
-## Iteración 0 — Bootstrap + MVP compilable (Fase 1)
 
 ## Iteración 0 — Bootstrap + MVP compilable (Fase 1)
 
