@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Release
+        run: |
+          xcodebuild -project BrewSnap.xcodeproj \
+            -scheme BrewSnap \
+            -configuration Release \
+            -derivedDataPath build \
+            build
+
+      - name: Create DMG
+        run: |
+          APP_PATH=$(find build -name "BrewSnap.app" -type d | head -1)
+          if [ -z "$APP_PATH" ]; then
+            echo "Error: .app not found"
+            exit 1
+          fi
+          echo "Found app at $APP_PATH"
+
+          hdiutil create -volname "BrewSnap" \
+            -srcfolder "$APP_PATH" \
+            -ov -format UDZO \
+            BrewSnap.dmg
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: BrewSnap.dmg
+          generate_release_notes: true
