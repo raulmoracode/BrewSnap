@@ -19,7 +19,7 @@ struct RepositoryView: View {
                             .font(.subheadline).foregroundStyle(.secondary)
                     }
                 }
-                Text("Open source project — anyone can visit the repository, view the code, report issues or contribute.")
+                Text("Open source project - anyone can visit the repository, view the code, report issues or contribute.")
                     .font(.callout).foregroundStyle(.secondary)
             }
 
@@ -82,7 +82,7 @@ private struct RepoCard: View {
             Spacer()
             if let resolvedURL {
                 Link(destination: resolvedURL) {
-                    Text("Abrir").font(.callout.weight(.semibold))
+                    Text("Open").font(.callout.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent).tint(color).controlSize(.small)
             }
