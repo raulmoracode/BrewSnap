@@ -15,10 +15,11 @@ struct BrewFormula: Codable, Identifiable, Hashable, Sendable {
     let pinned: Bool
     let kegOnly: Bool
     let installedOnRequest: Bool
+    let homepage: String?
 
     // MARK: - CodingKeys
 
     enum CodingKeys: String, CodingKey {
-        case name, version, tap, pinned, kegOnly, installedOnRequest
+        case name, version, tap, pinned, kegOnly, installedOnRequest, homepage
     }
 }

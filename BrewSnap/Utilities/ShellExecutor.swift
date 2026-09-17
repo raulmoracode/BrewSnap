@@ -68,12 +68,29 @@ enum ShellExecutor {
                     continuation.resume(throwing: ShellError.launchFailed(error.localizedDescription))
                     return
                 }
+
+                // Avoid pipe deadlock for large output (e.g. `brew info --json=v2 --installed` ~300KB):
+                // read stdout/stderr concurrently while the process runs,
+                // then wait for exit. Waiting before reading deadlocks when the pipe buffer fills.
+                final class Box: @unchecked Sendable { var data = Data() }
+                let outBox = Box()
+                let errBox = Box()
+                let group = DispatchGroup()
+                group.enter()
+                DispatchQueue.global(qos: .utility).async {
+                    outBox.data = outPipe.fileHandleForReading.readDataToEndOfFile()
+                    group.leave()
+                }
+                group.enter()
+                DispatchQueue.global(qos: .utility).async {
+                    errBox.data = errPipe.fileHandleForReading.readDataToEndOfFile()
+                    group.leave()
+                }
+                group.wait()
                 process.waitUntilExit()
 
-                let outData = outPipe.fileHandleForReading.readDataToEndOfFile()
-                let errData = errPipe.fileHandleForReading.readDataToEndOfFile()
-                let stdout = String(data: outData, encoding: .utf8) ?? ""
-                let stderr = String(data: errData, encoding: .utf8) ?? ""
+                let stdout = String(data: outBox.data, encoding: .utf8) ?? ""
+                let stderr = String(data: errBox.data, encoding: .utf8) ?? ""
                 let result = ShellResult(stdout: stdout, stderr: stderr, exitCode: process.terminationStatus)
                 continuation.resume(returning: result)
             }

@@ -13,10 +13,11 @@ struct BrewCask: Codable, Identifiable, Hashable, Sendable {
     let version: String
     let tap: String?
     let autoUpdate: Bool
+    let homepage: String?
 
     // MARK: - CodingKeys
 
     enum CodingKeys: String, CodingKey {
-        case name, version, tap, autoUpdate
+        case name, version, tap, autoUpdate, homepage
     }
 }

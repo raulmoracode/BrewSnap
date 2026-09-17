@@ -4,12 +4,16 @@
 import Foundation
 
 struct BrewSnapshot: Codable, Sendable {
+    // MARK: - Properties
+
     let version: Int
     let createdAt: Date
     let hostname: String
     let macOS: String
     let arch: String
     let homebrew: String
+    let isComplete: Bool
+    let warnings: [String]
     var formulae: [BrewFormula]
     var casks: [BrewCask]
     var taps: [BrewTap]
@@ -18,8 +22,10 @@ struct BrewSnapshot: Codable, Sendable {
     var casksCount: Int
     var totalDiskUsage: String?
 
+    // MARK: - CodingKeys
+
     enum CodingKeys: String, CodingKey {
-        case version, createdAt, hostname, macOS, arch, homebrew
+        case version, createdAt, hostname, macOS, arch, homebrew, isComplete, warnings
         case formulae, casks, taps, services
         case formulaeCount, casksCount, totalDiskUsage
     }
@@ -31,6 +37,8 @@ struct BrewSnapshot: Codable, Sendable {
         macOS: String,
         arch: String,
         homebrew: String,
+        isComplete: Bool = true,
+        warnings: [String] = [],
         formulae: [BrewFormula] = [],
         casks: [BrewCask] = [],
         taps: [BrewTap] = [],
@@ -43,6 +51,8 @@ struct BrewSnapshot: Codable, Sendable {
         self.macOS = macOS
         self.arch = arch
         self.homebrew = homebrew
+        self.isComplete = isComplete
+        self.warnings = warnings
         self.formulae = formulae
         self.casks = casks
         self.taps = taps
@@ -61,6 +71,8 @@ struct BrewSnapshot: Codable, Sendable {
         macOS = try c.decode(String.self, forKey: .macOS)
         arch = try c.decode(String.self, forKey: .arch)
         homebrew = try c.decode(String.self, forKey: .homebrew)
+        isComplete = try c.decodeIfPresent(Bool.self, forKey: .isComplete) ?? true
+        warnings = try c.decodeIfPresent([String].self, forKey: .warnings) ?? []
         formulae = try c.decodeIfPresent([BrewFormula].self, forKey: .formulae) ?? []
         casks = try c.decodeIfPresent([BrewCask].self, forKey: .casks) ?? []
         taps = try c.decodeIfPresent([BrewTap].self, forKey: .taps) ?? []
@@ -77,11 +89,11 @@ struct BrewSnapshot: Codable, Sendable {
             arch: "arm64",
             homebrew: "4.5.0",
             formulae: [
-                BrewFormula(name: "git", version: "2.47.0", tap: nil, pinned: false, kegOnly: false, installedOnRequest: true),
-                BrewFormula(name: "python@3.13", version: "3.13.7", tap: nil, pinned: true, kegOnly: false, installedOnRequest: true),
+                BrewFormula(name: "git", version: "2.47.0", tap: nil, pinned: false, kegOnly: false, installedOnRequest: true, homepage: "https://git-scm.com"),
+                BrewFormula(name: "python@3.13", version: "3.13.7", tap: nil, pinned: true, kegOnly: false, installedOnRequest: true, homepage: "https://www.python.org"),
             ],
             casks: [
-                BrewCask(name: "visual-studio-code", version: "1.93.0", tap: nil, autoUpdate: true),
+                BrewCask(name: "visual-studio-code", version: "1.93.0", tap: nil, autoUpdate: true, homepage: "https://code.visualstudio.com"),
             ],
             taps: [
                 BrewTap(name: "hashicorp/tap", remote: "https://github.com/hashicorp/homebrew-tap", trusted: true),
