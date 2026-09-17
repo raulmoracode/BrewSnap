@@ -8,15 +8,16 @@ struct ImportView: View {
     @Environment(AppState.self) private var appState
     @State private var importedSnapshot: BrewSnapshot?
     @State private var fileName: String?
-    @State private var errorMessage: String?
+    @State private var importMessage: String?
+    @State private var importIsError = false
     @State private var isTargeted = false
     @State private var jsonText: String = ""
-    @State private var gitHubOwner = ""
-    @State private var gitHubRepo = ""
-    @State private var gitHubProfile = ""
-    @State private var isFetchingGitHub = false
-    @State private var gitHubMessage: String?
-    @State private var gitHubIsError = false
+    @State private var isDownloading = false
+    @State private var isRestoring = false
+    @State private var restoreProgress: [String] = []
+    @State private var restoreMessage: String?
+    @State private var importedFromGitHub = false
+    @State private var showJSONPopover = false
 
     // MARK: - Body
 
@@ -24,29 +25,30 @@ struct ImportView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Import").font(.title2.bold())
-                    Text("Add a BrewSnap JSON to preview or restore.")
+                    Text("Import").font(.title2.bold()).tracking(-0.4)
+                    Text("Import a BrewSnap JSON from GitHub or a local file.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
 
-            // Zona drop
+            // Big local JSON drop zone
             ZStack {
                 RoundedRectangle(cornerRadius: 16)
                     .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
                     .foregroundStyle(isTargeted ? Color.accentColor : Color.secondary.opacity(0.3))
                     .background(
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(isTargeted ? Color.accentColor.opacity(0.08) : Color(NSColor.quaternaryLabelColor).opacity(0.15))
+                            .fill(isTargeted ? Color.accentColor.opacity(0.08) : Color(NSColor.quaternaryLabelColor).opacity(0.08))
                     )
 
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     Image(systemName: "doc.badge.plus")
                         .font(.system(size: 36))
-                        .foregroundStyle(isTargeted ? Color.accentColor : Color.secondary)
-                    Text("Drag your JSON here")
-                        .font(.headline)
-                    Text("or click to select")
+                        .foregroundStyle(isTargeted ? Color.accentColor : Color(hex: "#FBB040"))
+                    Text("Import from local JSON")
+                        .font(.title3.weight(.semibold))
+                    Text("Drag a BrewSnap JSON or click to select")
                         .font(.subheadline).foregroundStyle(.secondary)
+                        .lineLimit(1)
                     Button {
                         selectFile()
                     } label: {
@@ -62,9 +64,10 @@ struct ImportView: View {
                             .padding(.top, 4)
                     }
                 }
-                .padding(32)
+                .padding(28)
             }
             .frame(height: 200)
+            .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
             .onTapGesture { selectFile() }
             .dropDestination(for: URL.self) { urls, _ in
@@ -75,82 +78,48 @@ struct ImportView: View {
                 isTargeted = targeted
             }
 
-            // GitHub import — descarga desde repo privado (inverso a Export → Subir)
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label("From private GitHub repo", systemImage: "arrow.down.circle.fill")
-                        .font(.headline)
-                    Spacer()
-                    if isFetchingGitHub { ProgressView().scaleEffect(0.7) }
+            // Import from GitHub button
+            VStack(alignment: .leading, spacing: 8) {
+                Button {
+                    Task { await downloadFromRepo() }
+                } label: {
+                    Label(isDownloading ? "Downloading…" : "Import from GitHub", systemImage: "arrow.down.circle.fill")
+                        .frame(maxWidth: .infinity)
                 }
-                Text("Download the JSON directly from your private repo, just like you upload it from Export")
-                    .font(.caption).foregroundStyle(.secondary)
-                HStack(spacing: 8) {
-                    TextField("owner", text: $gitHubOwner).textFieldStyle(.roundedBorder).frame(width: 130)
-                    Text("/").foregroundStyle(.secondary)
-                    TextField("repo", text: $gitHubRepo).textFieldStyle(.roundedBorder).frame(width: 130)
-                    TextField("perfil", text: $gitHubProfile).textFieldStyle(.roundedBorder).frame(width: 100)
+                .buttonStyle(.borderedProminent)
+                .tint(Color(hex: "#1D3557"))
+                .controlSize(.large)
+                .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty)
+            }
+
+            if let msg = importMessage, importIsError {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Button {
-                        Task { await fetchFromGitHub() }
+                        importMessage = nil
                     } label: {
-                        Label(isFetchingGitHub ? "Downloading…" : "Descargar", systemImage: "arrow.down.doc.fill")
+                        Image(systemName: "xmark.circle.fill")
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color(hex: "#1D3557"))
-                    .disabled(gitHubOwner.isEmpty || gitHubRepo.isEmpty || isFetchingGitHub || appState.githubToken.isEmpty)
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                    .help("Dismiss")
+                    Text(msg)
+                        .font(.callout).foregroundStyle(.red)
                 }
-                if appState.githubToken.isEmpty {
-                    Text("Configure your token in Settings").font(.caption2).foregroundStyle(.orange)
-                }
-                if let msg = gitHubMessage {
-                    Label(msg, systemImage: gitHubIsError ? "xmark.circle.fill" : "checkmark.circle.fill")
-                        .font(.caption).foregroundStyle(gitHubIsError ? .red : .green)
-                        .padding(6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background((gitHubIsError ? Color.red : Color.green).opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
-                }
-                HStack(spacing: 6) {
-                    ForEach(appState.profiles, id: \.name) { profile in
-                        Button(profile.name) { gitHubProfile = profile.name }
-                            .buttonStyle(.bordered).controlSize(.small)
-                            .tint(gitHubProfile == profile.name ? Color.accentColor : .secondary)
-                    }
-                    Spacer()
-                    Button("Use repo from Settings") {
-                        gitHubOwner = appState.repoOwner
-                        gitHubRepo = appState.repoName
-                    }.controlSize(.small)
-                }
-            }
-            .padding(12)
-            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
-            .onAppear {
-                gitHubOwner = appState.repoOwner
-                gitHubRepo = appState.repoName
-                gitHubProfile = appState.selectedProfile.name
-            }
-
-            if let err = errorMessage {
-                Label(err, systemImage: "xmark.circle.fill")
-                    .font(.callout).foregroundStyle(.red)
-                    .padding(10)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                .transition(.opacity)
+            } else if let msg = importMessage {
+                Label(msg, systemImage: "checkmark.circle.fill")
+                    .font(.callout).foregroundStyle(.green)
+                    .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    .background(.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                    .transition(.opacity)
             }
 
-            if let snap = importedSnapshot {
-                Divider()
+            if let snap = importedSnapshot, !importedFromGitHub {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        StatCard(title: "Host", value: snap.hostname, icon: "laptopcomputer")
-                        StatCard(title: "macOS", value: snap.macOS, icon: "apple.logo")
-                        StatCard(title: "Arch", value: snap.arch, icon: "cpu")
-                        StatCard(title: "Homebrew", value: snap.homebrew, icon: "shippingbox")
-                    }
-                    Text("\(snap.formulaeCount) formulae · \(snap.casksCount) casks · \(snap.taps.count) taps · \(snap.createdAt.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.caption).foregroundStyle(.secondary)
-
                     TabView {
                         List(snap.formulae, id: \.name) { f in
                             PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)
@@ -172,28 +141,46 @@ struct ImportView: View {
 
                     HStack(spacing: 12) {
                         Button {
-                            appState.snapshot = snap
-                            appState.lastError = nil
-                        } label: { Label("Use as current snapshot", systemImage: "checkmark.circle.fill") }
-                        .buttonStyle(.borderedProminent).tint(.green)
-                        Button("Copy JSON") {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(jsonText, forType: .string)
-                        }.buttonStyle(.bordered)
-                        Button("Clear", role: .destructive) { clear() }
-                            .buttonStyle(.bordered)
-                        Spacer()
+                            Task { await restore(dryRun: false) }
+                        } label: {
+                            Label(isRestoring ? "Restoring…" : "Restore this Mac", systemImage: "arrow.down.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.green)
+                        .disabled(isRestoring || !snap.isComplete)
+
+                        Button {
+                            clear()
+                        } label: {
+                            Label("Clear", systemImage: "trash")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.red)
+                        .disabled(isRestoring)
+
+                        Button("View JSON") {
+                            showJSONPopover.toggle()
+                        }
+                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity)
+                        .help("Open the JSON in a code block")
+                        .popover(isPresented: $showJSONPopover, arrowEdge: .top) {
+                            JSONCodeBlockPopup(text: jsonText)
+                        }
                     }
 
-                    DisclosureGroup("View JSON") {
-                        ScrollView {
-                            Text(jsonText).font(.system(.caption, design: .monospaced))
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                    if !restoreProgress.isEmpty {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(restoreProgress, id: \.self) { Text($0).font(.caption.monospaced()) }
                         }
-                        .frame(height: 200)
                         .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    if let restoreMessage {
+                        Text(restoreMessage).font(.callout).foregroundStyle(restoreMessage.hasPrefix("Error") ? .red : .green)
                     }
                 }
             }
@@ -201,6 +188,7 @@ struct ImportView: View {
                 Spacer()
             }
             .padding(20)
+            .animation(.easeOut(duration: 0.2), value: importMessage)
         }
     }
 
@@ -217,13 +205,14 @@ struct ImportView: View {
     }
 
     private func handleURL(_ url: URL) {
-        // Necesita acceso security-scoped si viene de drop
+        // Needs security-scoped access when coming from drop
         let accessing = url.startAccessingSecurityScopedResource()
         defer { if accessing { url.stopAccessingSecurityScopedResource() } }
 
         fileName = url.lastPathComponent
-        errorMessage = nil
-        gitHubMessage = nil
+        importedFromGitHub = false
+        importMessage = nil
+        importIsError = false
         do {
             let data = try Data(contentsOf: url)
             jsonText = String(data: data, encoding: .utf8) ?? ""
@@ -232,65 +221,98 @@ struct ImportView: View {
         } catch {
             importedSnapshot = nil
             jsonText = ""
-            errorMessage = "Invalid JSON: \(error.localizedDescription)"
-        }
-    }
-
-    private func fetchFromGitHub() async {
-        let token = appState.githubToken
-        guard !token.isEmpty else {
-            gitHubMessage = "Configure your token in Settings"
-            gitHubIsError = true
-            return
-        }
-        let owner = gitHubOwner.trimmingCharacters(in: .whitespaces)
-        let repo = gitHubRepo.trimmingCharacters(in: .whitespaces)
-        let profile = gitHubProfile.trimmingCharacters(in: .whitespaces).isEmpty ? "brewsnap" : gitHubProfile.trimmingCharacters(in: .whitespaces)
-        guard !owner.isEmpty, !repo.isEmpty else {
-            gitHubMessage = "Owner and repo required"
-            gitHubIsError = true
-            return
-        }
-        isFetchingGitHub = true
-        defer { isFetchingGitHub = false }
-        do {
-            let service = GitHubService(token: token)
-            let (sha, content) = try await service.fetchFile(owner: owner, repo: repo, path: "\(profile).json")
-            _ = sha
-            let data = Data(content.utf8)
-            // content ya es JSON decodificado de base64
-            let snapData = content.data(using: .utf8) ?? data
-            let snap = try JSONDecoder.brewsnap.decode(BrewSnapshot.self, from: snapData)
-            importedSnapshot = snap
-            jsonText = content
-            fileName = "\(profile).json (GitHub)"
-            errorMessage = nil
-            gitHubMessage = "Descargado \(profile).json de \(owner)/\(repo) ✓"
-            gitHubIsError = false
-            // Guarda repo para futuras syncs
-            appState.repoOwner = owner
-            appState.repoName = repo
-        } catch {
-            gitHubMessage = error.localizedDescription
-            gitHubIsError = true
+            importMessage = "Invalid JSON: \(error.localizedDescription)"
+            importIsError = true
         }
     }
 
     private func clear() {
         importedSnapshot = nil
+        importedFromGitHub = false
         fileName = nil
-        errorMessage = nil
+        importMessage = nil
+        importIsError = false
         jsonText = ""
+        restoreProgress = []
+        restoreMessage = nil
+    }
+
+    private func downloadFromRepo() async {
+        guard !appState.repoOwner.isEmpty, appState.hasGithubToken else { return }
+        isDownloading = true
+        defer { isDownloading = false }
+        do {
+            let file = try await GitHubService(token: appState.githubToken).fetchFile(
+                owner: appState.repoOwner,
+                repo: "brewsnap",
+                path: "\(appState.selectedProfile.name).json"
+            )
+            guard let data = file.content.data(using: .utf8) else { throw ShellError.outputDecodingFailed }
+            let snapshot = try JSONDecoder.brewsnap.decode(BrewSnapshot.self, from: data)
+            importedFromGitHub = true
+            importedSnapshot = snapshot
+            appState.snapshot = snapshot
+            appState.lastError = nil
+            jsonText = file.content
+            fileName = "\(appState.repoOwner)/brewsnap/\(appState.selectedProfile.name).json"
+            importMessage = "Imported \(appState.repoOwner)/brewsnap ✓"
+            importIsError = false
+        } catch {
+            importMessage = "GitHub import failed: \(error.localizedDescription)"
+            importIsError = true
+        }
+    }
+
+    private func restore(dryRun: Bool) async {
+        guard let snap = importedSnapshot else { return }
+        isRestoring = true
+        restoreProgress = []
+        restoreMessage = nil
+        defer { isRestoring = false }
+        do {
+            try await HomebrewService().restore(snap, dryRun: dryRun) { line in
+                Task { @MainActor in restoreProgress.append(line) }
+            }
+            restoreMessage = dryRun ? "Dry run complete" : "Restore complete"
+            if !dryRun { appState.snapshot = try? await SnapshotService.generate() }
+        } catch {
+            restoreMessage = "Error: \(error.localizedDescription)"
+        }
     }
 }
 
-private struct StatCard: View {
-    let title: String; let value: String; let icon: String
+private struct JSONCodeBlockPopup: View {
+    let text: String
+    @State private var copied = false
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label(title, systemImage: icon).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
-            Text(value).font(.callout.weight(.medium)).lineLimit(1)
-        }.padding(10).frame(maxWidth: .infinity, alignment: .leading).background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("brewsnap.json").font(.headline)
+                Spacer()
+                Button(copied ? "Copied" : "Copy") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(text, forType: .string)
+                    copied = true
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 1_500_000_000)
+                        copied = false
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+            ScrollView {
+                Text(text)
+                    .font(.system(.callout, design: .monospaced))
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(10)
+            .background(Color(NSColor.textBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+        }
+        .padding(14)
+        .frame(width: 540, height: 440)
     }
 }
 
