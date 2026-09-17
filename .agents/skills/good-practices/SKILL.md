@@ -1,6 +1,6 @@
 ---
-name: buenas-practicas
-description: Revisa todo el código del proyecto y lo reescribe aplicando las buenas prácticas de Swift almacenadas en esta skill. Invocar explícitamente cuando se pida una revisión o refactor completo del código, o como checklist al escribir código nuevo.
+name: good-practices
+description: Reviews the project's Swift code and rewrites it applying the good practices stored in this skill. Invoke explicitly when a full code review or refactor is requested, or use as a checklist when writing new code.
 ---
 
 # Swift Best Practices for Clean Code (Ready for AI)
