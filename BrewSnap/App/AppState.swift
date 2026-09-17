@@ -3,6 +3,7 @@
 
 import Foundation
 import Observation
+import AppKit
 
 @Observable
 final class AppState {
@@ -16,8 +17,15 @@ final class AppState {
     var selectedProfile: BrewProfile = .default
     var profiles: [BrewProfile] = [.default, .work, .personal]
 
+    /// Tab requested from the menu bar (rawValue). Consumed by MainView.
+    var requestedTab: String? = nil
+
+    /// Weak reference to the main window, registered by MainView via WindowAccessor.
+    weak var mainWindow: NSWindow? = nil
+
     private let userDefaults: UserDefaults
     private let keychain: KeychainService.Type
+    private var cachedToken: String?
 
     // MARK: - Initialization
 
@@ -31,10 +39,25 @@ final class AppState {
 
     // MARK: - Settings (persisted)
 
-    /// Token GitHub guardado en Keychain (inyectado).
+    /// Token GitHub guardado en Keychain. Se lee una sola vez por lanzamiento
+    /// (caché en memoria) para evitar que el sistema pregunte por cada uso.
     var githubToken: String {
-        get { (try? keychain.load()) ?? "" }
-        set { try? keychain.save(token: newValue) }
+        get {
+            if let cachedToken { return cachedToken }
+            let loaded = (try? keychain.load()) ?? ""
+            if !loaded.isEmpty { cachedToken = loaded }
+            return loaded
+        }
+        set {
+            try? keychain.save(token: newValue)
+            cachedToken = newValue
+        }
+    }
+
+    /// Borra el token del Keychain y la caché en memoria.
+    func clearGithubToken() {
+        try? keychain.delete()
+        cachedToken = nil
     }
 
     var repoName: String {
@@ -45,6 +68,12 @@ final class AppState {
     var repoOwner: String {
         get { userDefaults.string(forKey: "repoOwner") ?? "" }
         set { userDefaults.set(newValue, forKey: "repoOwner") }
+    }
+
+    /// Flag sin acceso a Keychain: evita el prompt del sistema al pintar vistas.
+    var hasGithubToken: Bool {
+        get { userDefaults.bool(forKey: "hasGithubToken") }
+        set { userDefaults.set(newValue, forKey: "hasGithubToken") }
     }
 
     // MARK: - Types
@@ -77,11 +106,13 @@ final class AppState {
             }
             snapshot = snap
             lastError = nil
-            if snap.formulae.isEmpty && snap.casks.isEmpty {
-                lastError = "Empty snapshot — check that brew works (brew list --formula --versions)"
+            if !snap.isComplete {
+                lastError = "Snapshot incomplete. Nothing will be uploaded until Homebrew can be scanned completely."
+            } else if snap.formulae.isEmpty && snap.casks.isEmpty {
+                lastError = "Empty snapshot - check that brew works (brew list --formula --versions)"
             }
         } catch is CancellationError {
-            lastError = "Timeout scanning Homebrew (>30s) — try again"
+            lastError = "Timeout scanning Homebrew (>30s) - try again"
         } catch {
             lastError = error.localizedDescription
         }
