@@ -5,10 +5,14 @@ import SwiftUI
 
 @main
 struct BrewSnapApp: App {
+    // MARK: - Properties
+
     @State private var appState = AppState()
 
+    // MARK: - Body
+
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "main") {
             MainView()
                 .environment(appState)
                 .frame(minWidth: 1000, idealWidth: 1100, minHeight: 650, idealHeight: 700)
