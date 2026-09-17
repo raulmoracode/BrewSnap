@@ -12,6 +12,7 @@ enum GitHubError: LocalizedError {
     case network(String)
     case api(String, Int)
     case encodingFailed
+    case incompleteSnapshot([String])
 
     var errorDescription: String? {
         switch self {
@@ -25,6 +26,8 @@ enum GitHubError: LocalizedError {
             return "GitHub API error (\(code)): \(message)"
         case .encodingFailed:
             return "Failed to encode request"
+        case .incompleteSnapshot(let warnings):
+            return "Snapshot is incomplete and was not uploaded: \(warnings.joined(separator: "; "))"
         }
     }
 }
@@ -103,8 +106,19 @@ final class GitHubService: Sendable {
         return user.login
     }
 
+    /// Elimina un repositorio.
+    func deleteRepo(owner: String, repo: String) async throws {
+        let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/repos/\(owner)/\(repo)", method: "DELETE"))
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GitHubError.network("No HTTP response")
+        }
+        guard (200...299).contains(httpResponse.statusCode) || httpResponse.statusCode == 204 else {
+            throw GitHubError.api(String(data: responseData, encoding: .utf8) ?? "", httpResponse.statusCode)
+        }
+    }
+
     /// Crea un repositorio privado.
-    func createPrivateRepo(name: String = "brewsnap", description: String = "BrewSnap — Homebrew snapshot backups") async throws {
+    func createPrivateRepo(name: String = "brewsnap", description: String = "BrewSnap - Homebrew snapshot backups") async throws {
         let payload = CreateRepoRequest(name: name, isPrivate: true, description: description, autoInit: true)
         let data = try JSONEncoder().encode(payload)
         let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/user/repos", method: "POST", body: data))
@@ -115,6 +129,31 @@ final class GitHubService: Sendable {
         guard (200...299).contains(httpResponse.statusCode) else {
             throw GitHubError.api(String(data: responseData, encoding: .utf8) ?? "", httpResponse.statusCode)
         }
+    }
+
+    /// Devuelve los nombres de los repositorios que el usuario posee.
+    func listRepos() async throws -> [String] {
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent("/user/repos"),
+            resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [
+            URLQueryItem(name: "per_page", value: "100"),
+            URLQueryItem(name: "sort", value: "updated"),
+            URLQueryItem(name: "affiliation", value: "owner"),
+        ]
+        var request = URLRequest(url: components.url!)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw GitHubError.network("No HTTP response") }
+        guard http.statusCode == 200 else {
+            throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", http.statusCode)
+        }
+        struct RepoNet: Decodable { let name: String }
+        return try JSONDecoder().decode([RepoNet].self, from: data).map(\.name)
     }
 
     /// Obtiene un archivo del repo (devuelve SHA y contenido decodificado).
@@ -157,6 +196,9 @@ final class GitHubService: Sendable {
 
     /// Sube un snapshot como `{profile}.json` si hay cambios.
     func commitSnapshot(owner: String, repo: String, snapshot: BrewSnapshot, profile: String = "brewsnap") async throws {
+        guard snapshot.isComplete else {
+            throw GitHubError.incompleteSnapshot(snapshot.warnings)
+        }
         let json = try snapshot.toPrettyJSON()
         let path = "\(profile).json"
         var existingSHA: String?
@@ -166,7 +208,7 @@ final class GitHubService: Sendable {
             guard existing.content != json else { return } // Already up to date
         }
 
-        let message = "snapshot: \(snapshot.formulaeCount) formulae, \(snapshot.casksCount) casks — \(ISO8601DateFormatter().string(from: snapshot.createdAt))"
+        let message = "snapshot: \(snapshot.formulaeCount) formulae, \(snapshot.casksCount) casks - \(ISO8601DateFormatter().string(from: snapshot.createdAt))"
         try await putFile(owner: owner, repo: repo, path: path, content: json, message: message, sha: existingSHA)
     }
 }

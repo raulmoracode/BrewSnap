@@ -19,7 +19,7 @@ enum KeychainError: LocalizedError {
 }
 
 enum KeychainService {
-    private static let service = "com.raulmorasanchez.BrewSnap"
+    private static let service = "BrewSnap"
     private static let account = "github-token"
 
     static func save(token: String) throws {
