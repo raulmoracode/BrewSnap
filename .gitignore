@@ -29,3 +29,7 @@ Thumbs.db
 # BrewSnap
 brewsnap.json
 *.json.bak
+
+# AI tooling
+.agents/
+skills-lock.json
