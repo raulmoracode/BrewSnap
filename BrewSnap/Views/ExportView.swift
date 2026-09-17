@@ -19,9 +19,9 @@ struct ExportView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Export").font(.title2.bold())
+                Text("Export").font(.title2.bold()).tracking(-0.4)
                 Text("Save your Homebrew environment as JSON and choose where to keep it.")
-                    .font(.callout).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -31,63 +31,48 @@ struct ExportView: View {
                     .padding(8).background(.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
             }
 
+            if let snap = appState.snapshot, !snap.isComplete {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Upload blocked: this snapshot is incomplete", systemImage: "lock.fill")
+                        .font(.callout.weight(.semibold))
+                    ForEach(snap.warnings, id: \.self) { warning in
+                        Text("• \(warning)")
+                            .font(.caption)
+                    }
+                }
+                .foregroundStyle(.orange)
+                .padding(12)
+                .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+            }
+
             if let snap = appState.snapshot, snap.formulae.isEmpty && snap.casks.isEmpty && snap.taps.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("No packages found — check brew", systemImage: "exclamationmark.octagon.fill")
+                    Label("No packages found - check brew", systemImage: "exclamationmark.octagon.fill")
                         .foregroundStyle(.orange).font(.callout.weight(.semibold))
                     Text("brew: \(ShellExecutor.brewExecutable()) · exists: \(FileManager.default.isExecutableFile(atPath: ShellExecutor.brewExecutable()) ? "yes" : "no")")
                         .font(.caption.monospaced()).foregroundStyle(.secondary)
                     Text("Run in Terminal: brew list --formula --versions | wc -l")
                         .font(.caption).foregroundStyle(.secondary)
                 }
-                .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 10))
+                .padding(12).background(.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
             }
 
-            // Siempre visible — 2 opciones (responsive: HStack si cabe, VStack si no)
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 16) {
-                // Option 1: Upload to repo
-                VStack(spacing: 10) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Color(hex: "#1D3557"))
-                    Text("Upload to repo")
-                        .font(.headline)
-                    Text("Sync the JSON to your private GitHub repo")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                        .frame(height: 32)
-                    Button {
-                        Task { await uploadToRepo() }
-                    } label: {
-                        Label(isUploading ? "Uploading…" : "Upload to repo", systemImage: "arrow.triangle.2.circlepath")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color(hex: "#1D3557"))
-                    .disabled(appState.snapshot == nil || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || appState.githubToken.isEmpty)
-                    if appState.githubToken.isEmpty {
-                        Text("Configure your token in Settings")
-                            .font(.caption2).foregroundStyle(.orange)
-                    } else if !appState.repoOwner.isEmpty {
-                        Text("\(appState.repoOwner)/\(appState.repoName)")
-                            .font(.caption2.monospaced()).foregroundStyle(.secondary)
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .padding(16)
-                .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
+            // Big Download locally box
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [8, 6]))
+                    .foregroundStyle(Color.secondary.opacity(0.3))
+                    .background(RoundedRectangle(cornerRadius: 16).fill(Color(NSColor.quaternaryLabelColor).opacity(0.08)))
 
-                // Option 2: Download locally
                 VStack(spacing: 10) {
                     Image(systemName: "arrow.down.circle.fill")
-                        .font(.system(size: 32))
+                        .font(.system(size: 36))
                         .foregroundStyle(Color(hex: "#FBB040"))
                     Text("Download locally")
-                        .font(.headline)
+                        .font(.title3.weight(.semibold))
                     Text("Save the JSON to your Mac")
-                        .font(.caption).foregroundStyle(.secondary)
-                        .frame(height: 32)
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .lineLimit(1)
                     Button {
                         saveJSON()
                     } label: {
@@ -96,40 +81,50 @@ struct ExportView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#FBB040"))
                     .disabled(appState.snapshot == nil)
-                    Text(appState.snapshot != nil ? "\(appState.selectedProfile.fileName)" : " ")
-                        .font(.caption2.monospaced()).foregroundStyle(.secondary)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(16)
-                .background(.background, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
-                }
-
-                // Fallback vertical cuando no cabe en horizontal
-                VStack(spacing: 16) {
-                    VStack(spacing: 10) {
-                        Image(systemName: "arrow.up.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#1D3557"))
-                        Text("Upload to repo").font(.headline)
-                        Text("Sync the JSON to your private GitHub repo").font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(height: 32)
-                        Button { Task { await uploadToRepo() } } label: { Label(isUploading ? "Uploading…" : "Upload to repo", systemImage: "arrow.triangle.2.circlepath") }
-                            .buttonStyle(.borderedProminent).tint(Color(hex: "#1D3557")).disabled(appState.snapshot == nil || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || appState.githubToken.isEmpty)
-                    }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
-                    VStack(spacing: 10) {
-                        Image(systemName: "arrow.down.circle.fill").font(.system(size: 32)).foregroundStyle(Color(hex: "#FBB040"))
-                        Text("Download locally").font(.headline)
-                        Text("Save the JSON to your Mac").font(.caption).foregroundStyle(.secondary).frame(height: 32)
-                        Button { saveJSON() } label: { Label("Download JSON", systemImage: "arrow.down.doc.fill") }
-                            .buttonStyle(.borderedProminent).tint(Color(hex: "#FBB040")).disabled(appState.snapshot == nil)
-                    }.frame(maxWidth: .infinity).padding(16).background(.background, in: RoundedRectangle(cornerRadius: 12)).overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [6, 4])).foregroundStyle(Color.secondary.opacity(0.35)))
-                }
+                .padding(28)
             }
+            .frame(height: 200)
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { saveJSON() }
 
-            if let msg = uploadMessage {
-                Label(msg, systemImage: uploadIsError ? "xmark.circle.fill" : "checkmark.circle.fill")
-                    .font(.callout).foregroundStyle(uploadIsError ? .red : .green)
+            // Upload to repo button
+            Button {
+                Task { await uploadToRepo() }
+            } label: {
+                Label(isUploading ? "Uploading…" : "Upload to repo", systemImage: "arrow.triangle.2.circlepath")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Color(hex: "#1D3557"))
+            .controlSize(.large)
+            .disabled(appState.snapshot == nil || appState.snapshot?.isComplete == false || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || !appState.hasGithubToken)
+
+            if let msg = uploadMessage, uploadIsError {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Button {
+                        uploadMessage = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.red)
+                    .help("Dismiss")
+                    Text(msg)
+                        .font(.callout).foregroundStyle(.red)
+                }
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                .transition(.opacity)
+            } else if let msg = uploadMessage {
+                Label(msg, systemImage: "checkmark.circle.fill")
+                    .font(.callout).foregroundStyle(.green)
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background((uploadIsError ? Color.red : Color.green).opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    .background(.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                    .transition(.opacity)
             }
 
             if appState.snapshot == nil {
@@ -158,9 +153,9 @@ struct ExportView: View {
                     HStack {
                         Text("JSON Preview").font(.headline)
                         Spacer()
-                        Button("Copiar") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(jsonPreview, forType: .string) }
+                        Button("Copy") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(jsonPreview, forType: .string) }
                             .buttonStyle(.bordered).controlSize(.small)
-                        Button("Descargar…") { saveJSON() }
+                        Button("Download…") { saveJSON() }
                             .buttonStyle(.bordered).controlSize(.small)
                     }
                     ScrollView { Text(jsonPreview).font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
@@ -169,6 +164,7 @@ struct ExportView: View {
             }
             }
             .padding(20)
+            .animation(.easeOut(duration: 0.2), value: uploadMessage)
         }
         .task { if appState.snapshot == nil { await createSnapshot() } }
     }
@@ -197,6 +193,11 @@ struct ExportView: View {
 
     private func uploadToRepo() async {
         guard let snap = appState.snapshot else { return }
+        guard snap.isComplete else {
+            uploadMessage = "Upload blocked: snapshot is incomplete"
+            uploadIsError = true
+            return
+        }
         let token = appState.githubToken
         guard !token.isEmpty else {
             uploadMessage = "Configure your token in Settings"
