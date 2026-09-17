@@ -12,7 +12,7 @@ struct PackagesView: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 16) {
             header
             if let snap = appState.snapshot {
                 if snap.formulae.isEmpty && snap.casks.isEmpty {
@@ -20,15 +20,23 @@ struct PackagesView: View {
                 } else {
                     columns(snap: snap)
                 }
+            } else if appState.isScanning {
+                VStack(spacing: 10) {
+                    ProgressView().controlSize(.large)
+                    Text("Reading Homebrew…")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minHeight: 420)
             } else {
                 ContentUnavailableView(
-                    "Sin snapshot",
+                    "No snapshot",
                     systemImage: "shippingbox",
-                    description: Text("Crea un snapshot en Export para ver tus paquetes")
+                    description: Text("Create a snapshot in Export to see your packages")
                 )
             }
         }
-        .padding(16)
+        .padding(20)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -43,13 +51,9 @@ struct PackagesView: View {
     private var header: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Packages").font(.title2.bold())
-                if let snap = appState.snapshot {
-                    Text("\(snap.formulaeCount + snap.casksCount) paquetes · \(snap.formulaeCount) formulae · \(snap.casksCount) casks")
-                        .font(.subheadline).foregroundStyle(.secondary)
-                } else {
-                    Text("All your Homebrew packages").font(.subheadline).foregroundStyle(.secondary)
-                }
+                Text("Packages").font(.title2.bold()).tracking(-0.4)
+                Text("Browse and search your installed formulae and casks.")
+                    .font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer()
             HStack(spacing: 8) {
@@ -64,7 +68,8 @@ struct PackagesView: View {
                 }
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(.quaternary, lineWidth: 1))
         }
     }
 
@@ -95,70 +100,83 @@ struct PackagesView: View {
             let version: String
             let kind: String // "F" o "C"
             let isPinned: Bool
+            let homepage: String?
         }
-        let allItems: [AllItem] = (filteredFormulae.map { AllItem(id: "f-\($0.name)", name: $0.name, version: $0.version, kind: "F", isPinned: $0.pinned) }
-            + filteredCasks.map { AllItem(id: "c-\($0.name)", name: $0.name, version: $0.version, kind: "C", isPinned: false) })
+        let allItems: [AllItem] = (filteredFormulae.map { AllItem(id: "f-\($0.name)", name: $0.name, version: $0.version, kind: "F", isPinned: $0.pinned, homepage: $0.homepage) }
+            + filteredCasks.map { AllItem(id: "c-\($0.name)", name: $0.name, version: $0.version, kind: "C", isPinned: false, homepage: $0.homepage) })
             .sorted { $0.name.lowercased() < $1.name.lowercased() }
 
         return HStack(spacing: 12) {
             // COL 1: All
             VStack(alignment: .leading, spacing: 0) {
-                ColumnHeader(title: "All", count: allItems.count, icon: "shippingbox.fill", color: Color(hex: "#1D3557"))
+                ColumnHeader(title: "All", count: allItems.count)
                 Group {
                     if allItems.isEmpty {
                         ContentUnavailableView.search(text: searchText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List(allItems) { item in
-                            PackageRow(name: item.name, version: item.version, isPinned: item.isPinned)
+                            PackageRow(name: item.name, version: item.version, isPinned: item.isPinned, homepage: item.homepage)
+                                .listRowBackground(Color.clear)
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .scrollIndicators(.hidden)
                     }
                 }
                 .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
-            .background(.background, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
 
             // COL 2: Formulae
             VStack(alignment: .leading, spacing: 0) {
-                ColumnHeader(title: "Formulae", count: filteredFormulae.count, icon: "cube.fill", color: .orange)
+                ColumnHeader(title: "Formulae", count: filteredFormulae.count)
                 Group {
                     if filteredFormulae.isEmpty {
                         ContentUnavailableView.search(text: searchText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List(filteredFormulae, id: \.name) { f in
-                            PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned)
+                            PackageRow(name: f.name, version: f.version, tap: f.tap, isPinned: f.pinned, homepage: f.homepage)
+                                .listRowBackground(Color.clear)
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .scrollIndicators(.hidden)
                     }
                 }
                 .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
-            .background(.background, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
 
             // COL 3: Casks
             VStack(alignment: .leading, spacing: 0) {
-                ColumnHeader(title: "Casks", count: filteredCasks.count, icon: "app.badge.fill", color: .purple)
+                ColumnHeader(title: "Casks", count: filteredCasks.count)
                 Group {
                     if filteredCasks.isEmpty {
                         ContentUnavailableView.search(text: searchText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
                         List(filteredCasks, id: \.name) { c in
-                            PackageRow(name: c.name, version: c.version, tap: c.tap)
+                            PackageRow(name: c.name, version: c.version, tap: c.tap, homepage: c.homepage)
+                                .listRowBackground(Color.clear)
                         }
                         .listStyle(.plain)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .scrollIndicators(.hidden)
                     }
                 }
                 .frame(minHeight: 520)
             }
             .frame(maxWidth: .infinity)
-            .background(.background, in: RoundedRectangle(cornerRadius: 12))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
         }
     }
@@ -167,18 +185,15 @@ struct PackagesView: View {
 private struct ColumnHeader: View {
     let title: String
     let count: Int
-    let icon: String
-    let color: Color
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon).foregroundStyle(color)
+        HStack {
             Text(title).font(.headline)
+            Spacer()
             Text("\(count)").font(.caption.weight(.semibold))
                 .padding(.horizontal, 7).padding(.vertical, 2)
                 .background(.quaternary, in: Capsule())
-            Spacer()
         }
         .padding(.horizontal, 12).padding(.vertical, 10)
-        .background(.quaternary.opacity(0.5))
+        .background(.thickMaterial, in: UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12))
     }
 }

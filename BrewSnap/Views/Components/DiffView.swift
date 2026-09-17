@@ -8,7 +8,7 @@ struct DiffView: View {
 
     var body: some View {
         if diff.isEmpty {
-            ContentUnavailableView("Already up to date", systemImage: "checkmark.circle.fill", description: Text("No hay diferencias entre los snapshots"))
+            ContentUnavailableView("Already up to date", systemImage: "checkmark.circle.fill", description: Text("No differences between snapshots"))
         } else {
             List {
                 if !diff.addedFormulae.isEmpty {
@@ -22,7 +22,7 @@ struct DiffView: View {
                     }
                 }
                 if !diff.removedFormulae.isEmpty {
-                    Section("Eliminados (\(diff.removedFormulae.count))") {
+                    Section("Removed (\(diff.removedFormulae.count))") {
                         ForEach(diff.removedFormulae, id: \.name) { f in
                             HStack {
                                 Label(f.name, systemImage: "minus.circle.fill").foregroundStyle(.red)
@@ -32,7 +32,7 @@ struct DiffView: View {
                     }
                 }
                 if !diff.updatedFormulae.isEmpty {
-                    Section("Actualizados (\(diff.updatedFormulae.count))") {
+                    Section("Updated (\(diff.updatedFormulae.count))") {
                         ForEach(diff.updatedFormulae, id: \.new.name) { pair in
                             HStack {
                                 Label(pair.new.name, systemImage: "arrow.triangle.2.circlepath").foregroundStyle(.orange)
