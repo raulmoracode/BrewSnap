@@ -82,7 +82,7 @@ final class GitHubService: Sendable {
     private func makeRequest(path: String, method: String = "GET", body: Data? = nil) -> URLRequest {
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.addValue(["Bearer", token].joined(separator: " "), forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
         if let body {
@@ -152,7 +152,7 @@ final class GitHubService: Sendable {
         ]
         var request = URLRequest(url: components.url!)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.addValue(["Bearer", token].joined(separator: " "), forHTTPHeaderField: "Authorization")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("2022-11-28", forHTTPHeaderField: "X-GitHub-Api-Version")
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -162,6 +162,23 @@ final class GitHubService: Sendable {
         }
         struct RepoNet: Decodable { let name: String }
         return try JSONDecoder().decode([RepoNet].self, from: data).map(\.name)
+    }
+
+    /// Checks whether the authenticated user owns the configured repository.
+    func repositoryExists(owner: String, repo: String) async throws -> Bool {
+        let (data, response) = try await URLSession.shared.data(
+            for: makeRequest(path: "/repos/\(owner)/\(repo)")
+        )
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GitHubError.network("No HTTP response")
+        }
+        if httpResponse.statusCode == 404 {
+            return false
+        }
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw GitHubError.api(String(data: data, encoding: .utf8) ?? "", httpResponse.statusCode)
+        }
+        return true
     }
 
     /// Obtiene un archivo del repo (devuelve SHA y contenido decodificado).

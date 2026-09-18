@@ -384,6 +384,7 @@ showToken = false
             appState.repoName = "brewsnap-config"
             repoNameInput = "brewsnap-config"
             try await gh.createPrivateRepo(name: "brewsnap-config")
+            appState.hasConfiguredRepo = true
             validationMessage = "Repository \(owner)/brewsnap-config created ✓"
         } catch GitHubError.repoExists {
             validationMessage = "Repo already exists - you can Update in Sync"
@@ -402,6 +403,7 @@ showToken = false
         isDeletingRepo = true; defer { isDeletingRepo = false }
         do {
             try await GitHubService(token: token).deleteRepo(owner: owner, repo: "brewsnap-config")
+            appState.hasConfiguredRepo = false
             validationMessage = "Repository \(owner)/brewsnap-config deleted ✓"
         } catch let GitHubError.api(message, code) where code == 403 || code == 404 {
             validationMessage = "✗ \(message) - token needs the delete_repo scope: create one in Create one on GitHub, save it and validate"
