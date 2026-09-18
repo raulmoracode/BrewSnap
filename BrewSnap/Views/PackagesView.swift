@@ -125,9 +125,9 @@ struct PackagesView: View {
                         .scrollIndicators(.hidden)
                     }
                 }
-                .frame(minHeight: 520)
+                .frame(maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
 
@@ -149,9 +149,9 @@ struct PackagesView: View {
                         .scrollIndicators(.hidden)
                     }
                 }
-                .frame(minHeight: 520)
+                .frame(maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
 
@@ -173,12 +173,13 @@ struct PackagesView: View {
                         .scrollIndicators(.hidden)
                     }
                 }
-                .frame(minHeight: 520)
+                .frame(maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary, lineWidth: 1))
         }
+        .frame(maxHeight: .infinity)
     }
 }
 
