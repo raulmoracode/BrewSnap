@@ -29,7 +29,7 @@ struct SettingsView: View {
 
     private var repoWebURL: URL? {
         let owner = repoOwnerInput.trimmingCharacters(in: .whitespaces)
-        let name = repoNameInput.trimmingCharacters(in: .whitespaces).isEmpty ? "brewsnap" : repoNameInput.trimmingCharacters(in: .whitespaces)
+        let name = repoNameInput.trimmingCharacters(in: .whitespaces).isEmpty ? "brewsnap-config" : repoNameInput.trimmingCharacters(in: .whitespaces)
         guard !owner.isEmpty else { return nil }
         return URL(string: "https://github.com/\(owner)/\(name)")
     }
@@ -66,8 +66,8 @@ showToken = false
             isTokenLocked = hasStoredToken
             tokenInput = hasStoredToken ? maskToken : ""
             repoOwnerInput = appState.repoOwner
-            repoNameInput = "brewsnap"
-            appState.repoName = "brewsnap"
+            repoNameInput = "brewsnap-config"
+            appState.repoName = "brewsnap-config"
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
         .scrollContentBackground(.hidden)
@@ -77,7 +77,7 @@ showToken = false
                 Task { await deleteRepo() }
             }
         } message: {
-            Text("\(repoOwnerInput)/\(repoNameInput.isEmpty ? "brewsnap" : repoNameInput) will be removed from GitHub. This cannot be undone.")
+            Text("\(repoOwnerInput)/\(repoNameInput.isEmpty ? "brewsnap-config" : repoNameInput) will be removed from GitHub. This cannot be undone.")
         }
     }
 
@@ -203,12 +203,12 @@ showToken = false
                         .foregroundStyle(.secondary)
                         .help("Owner filled in when you validate the token")
                     Text("/").foregroundStyle(.secondary)
-                    Text("brewsnap")
+                    Text("brewsnap-config")
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .background(.quaternary.opacity(0.15), in: RoundedRectangle(cornerRadius: 6))
-                        .help("The repo name is always brewsnap")
+                        .help("The repo name is always brewsnap-config")
                     Spacer()
                     if let url = repoWebURL {
                         Button {
@@ -381,10 +381,10 @@ showToken = false
             let owner = try await gh.validateToken()
             repoOwnerInput = owner
             appState.repoOwner = owner
-            appState.repoName = "brewsnap"
-            repoNameInput = "brewsnap"
-            try await gh.createPrivateRepo(name: "brewsnap")
-            validationMessage = "Repository \(owner)/brewsnap created ✓"
+            appState.repoName = "brewsnap-config"
+            repoNameInput = "brewsnap-config"
+            try await gh.createPrivateRepo(name: "brewsnap-config")
+            validationMessage = "Repository \(owner)/brewsnap-config created ✓"
         } catch GitHubError.repoExists {
             validationMessage = "Repo already exists - you can Update in Sync"
         } catch {
@@ -401,8 +401,8 @@ showToken = false
         }
         isDeletingRepo = true; defer { isDeletingRepo = false }
         do {
-            try await GitHubService(token: token).deleteRepo(owner: owner, repo: "brewsnap")
-            validationMessage = "Repository \(owner)/brewsnap deleted ✓"
+            try await GitHubService(token: token).deleteRepo(owner: owner, repo: "brewsnap-config")
+            validationMessage = "Repository \(owner)/brewsnap-config deleted ✓"
         } catch let GitHubError.api(message, code) where code == 403 || code == 404 {
             validationMessage = "✗ \(message) - token needs the delete_repo scope: create one in Create one on GitHub, save it and validate"
         } catch {
