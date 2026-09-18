@@ -100,6 +100,7 @@ struct ExportView: View {
             .tint(Color(hex: "#1D3557"))
             .controlSize(.large)
             .disabled(appState.snapshot == nil || appState.snapshot?.isComplete == false || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || !appState.hasGithubToken)
+            .tokenAwareHover()
 
             if let msg = uploadMessage, uploadIsError {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
