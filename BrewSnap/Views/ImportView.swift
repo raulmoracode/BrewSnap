@@ -18,6 +18,7 @@ struct ImportView: View {
     @State private var restoreMessage: String?
     @State private var importedFromGitHub = false
     @State private var showJSONPopover = false
+    @State private var isHoveringGithubButton = false
 
     // MARK: - Body
 
@@ -90,6 +91,27 @@ struct ImportView: View {
                 .tint(Color(hex: "#1D3557"))
                 .controlSize(.large)
                 .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty)
+                .onHover { hovering in
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        isHoveringGithubButton = hovering
+                    }
+                    if hovering {
+                        if appState.hasGithubToken {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.operationNotAllowed.push()
+                        }
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                .overlay(alignment: .bottom) {
+                    TokenHelpTooltip()
+                        .fixedSize()
+                        .opacity(isHoveringGithubButton && !appState.hasGithubToken ? 1 : 0)
+                        .allowsHitTesting(false)
+                        .offset(y: 38)
+                }
             }
 
             if let msg = importMessage, importIsError {
@@ -278,6 +300,18 @@ struct ImportView: View {
         } catch {
             restoreMessage = "Error: \(error.localizedDescription)"
         }
+    }
+}
+
+@MainActor
+private struct TokenHelpTooltip: View {
+    var body: some View {
+        Text("Set up your GitHub token in Settings")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.thinMaterial, in: Capsule())
     }
 }
 
