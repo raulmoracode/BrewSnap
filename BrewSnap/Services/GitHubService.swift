@@ -38,12 +38,14 @@ private struct CreateRepoRequest: Codable {
     let name: String
     let isPrivate: Bool
     let description: String
+    let homepage: String
     let autoInit: Bool
 
     enum CodingKeys: String, CodingKey {
         case name
         case isPrivate = "private"
         case description
+        case homepage
         case autoInit = "auto_init"
     }
 }
@@ -119,7 +121,13 @@ final class GitHubService: Sendable {
 
     /// Crea un repositorio privado.
     func createPrivateRepo(name: String = "brewsnap-config", description: String = "BrewSnap - Homebrew snapshot backups") async throws {
-        let payload = CreateRepoRequest(name: name, isPrivate: true, description: description, autoInit: true)
+        let payload = CreateRepoRequest(
+            name: name,
+            isPrivate: true,
+            description: description,
+            homepage: "https://brewsnap.raulmoracode.com",
+            autoInit: true
+        )
         let data = try JSONEncoder().encode(payload)
         let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/user/repos", method: "POST", body: data))
         guard let httpResponse = response as? HTTPURLResponse else {
