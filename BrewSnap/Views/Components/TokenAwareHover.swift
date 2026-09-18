@@ -10,6 +10,17 @@ import AppKit
 struct TokenAwareHoverModifier: ViewModifier {
     @Environment(AppState.self) private var appState
     @State private var isHovering = false
+    var requiresRepository = false
+
+    private var actionIsAvailable: Bool {
+        appState.hasGithubToken && (!requiresRepository || appState.hasConfiguredRepo)
+    }
+
+    private var tooltipText: String {
+        appState.hasGithubToken
+            ? "Go to Settings to create the brewsnap-config repository"
+            : "Set up your GitHub token in Settings"
+    }
 
     func body(content: Content) -> some View {
         content
@@ -18,7 +29,7 @@ struct TokenAwareHoverModifier: ViewModifier {
                     isHovering = hovering
                 }
                 if hovering {
-                    if appState.hasGithubToken {
+                    if actionIsAvailable {
                         NSCursor.pointingHand.push()
                     } else {
                         NSCursor.operationNotAllowed.push()
@@ -28,9 +39,9 @@ struct TokenAwareHoverModifier: ViewModifier {
                 }
             }
             .overlay(alignment: .bottom) {
-                TokenHelpTooltip()
+                TokenHelpTooltip(text: tooltipText)
                     .fixedSize()
-                    .opacity(isHovering && !appState.hasGithubToken ? 1 : 0)
+                    .opacity(isHovering && !actionIsAvailable ? 1 : 0)
                     .allowsHitTesting(false)
                     .offset(y: 38)
             }
@@ -39,15 +50,17 @@ struct TokenAwareHoverModifier: ViewModifier {
 
 extension View {
     /// Adds GitHub token-aware hover feedback (cursor + tooltip).
-    func tokenAwareHover() -> some View {
-        modifier(TokenAwareHoverModifier())
+    func tokenAwareHover(requiresRepository: Bool = false) -> some View {
+        modifier(TokenAwareHoverModifier(requiresRepository: requiresRepository))
     }
 }
 
 /// Minimalist reminder shown below a GitHub action button when the token is not configured.
 struct TokenHelpTooltip: View {
+    let text: String
+
     var body: some View {
-        Text("Set up your GitHub token in Settings")
+        Text(text)
             .font(.caption)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 12)

@@ -14,6 +14,8 @@ final class AppState {
     var isScanning = false
     var lastError: String?
     var syncStatus: SyncStatus = .idle
+    var hasConfiguredRepo = false
+    var isCheckingRepo = false
     var selectedProfile: BrewProfile = .default
     var profiles: [BrewProfile] = [.default, .work, .personal]
 
@@ -58,6 +60,27 @@ final class AppState {
     func clearGithubToken() {
         try? keychain.delete()
         cachedToken = nil
+        hasConfiguredRepo = false
+    }
+
+    /// Verifies that the configured GitHub account owns the snapshot repository.
+    func checkConfiguredRepo() async {
+        let owner = repoOwner.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard hasGithubToken, !owner.isEmpty else {
+            hasConfiguredRepo = false
+            return
+        }
+
+        isCheckingRepo = true
+        defer { isCheckingRepo = false }
+        do {
+            hasConfiguredRepo = try await GitHubService(token: githubToken).repositoryExists(
+                owner: owner,
+                repo: repoName
+            )
+        } catch {
+            hasConfiguredRepo = false
+        }
     }
 
     var repoName: String {
