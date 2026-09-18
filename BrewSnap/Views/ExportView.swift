@@ -81,6 +81,7 @@ struct ExportView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#FBB040"))
                     .disabled(appState.snapshot == nil)
+                    .pointerCursor()
                 }
                 .padding(28)
             }

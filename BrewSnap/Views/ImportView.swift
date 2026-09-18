@@ -56,6 +56,7 @@ struct ImportView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "#FBB040"))
+                    .pointerCursor()
 
                     if let name = fileName {
                         Label(name, systemImage: "doc.fill")
