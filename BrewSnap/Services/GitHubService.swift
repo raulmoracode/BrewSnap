@@ -118,7 +118,7 @@ final class GitHubService: Sendable {
     }
 
     /// Crea un repositorio privado.
-    func createPrivateRepo(name: String = "brewsnap", description: String = "BrewSnap - Homebrew snapshot backups") async throws {
+    func createPrivateRepo(name: String = "brewsnap-config", description: String = "BrewSnap - Homebrew snapshot backups") async throws {
         let payload = CreateRepoRequest(name: name, isPrivate: true, description: description, autoInit: true)
         let data = try JSONEncoder().encode(payload)
         let (responseData, response) = try await URLSession.shared.data(for: makeRequest(path: "/user/repos", method: "POST", body: data))

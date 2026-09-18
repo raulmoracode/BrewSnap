@@ -246,7 +246,7 @@ struct ImportView: View {
         do {
             let file = try await GitHubService(token: appState.githubToken).fetchFile(
                 owner: appState.repoOwner,
-                repo: "brewsnap",
+                repo: appState.repoName,
                 path: "\(appState.selectedProfile.name).json"
             )
             guard let data = file.content.data(using: .utf8) else { throw ShellError.outputDecodingFailed }

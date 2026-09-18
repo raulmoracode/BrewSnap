@@ -61,7 +61,7 @@ final class AppState {
     }
 
     var repoName: String {
-        get { userDefaults.string(forKey: "repoName") ?? "brewsnap" }
+        get { userDefaults.string(forKey: "repoName") ?? "brewsnap-config" }
         set { userDefaults.set(newValue, forKey: "repoName") }
     }
 
