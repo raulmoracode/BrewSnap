@@ -90,8 +90,8 @@ struct ImportView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Color(hex: "#1D3557"))
                 .controlSize(.large)
-                .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty)
-                .tokenAwareHover()
+                .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty || !appState.hasConfiguredRepo || appState.isCheckingRepo)
+                .tokenAwareHover(requiresRepository: true)
             }
 
             if let msg = importMessage, importIsError {
@@ -192,6 +192,9 @@ struct ImportView: View {
             .padding(20)
             .animation(.easeOut(duration: 0.2), value: importMessage)
         }
+        .task {
+            await appState.checkConfiguredRepo()
+        }
     }
 
     // MARK: - Private Methods
@@ -240,7 +243,7 @@ struct ImportView: View {
     }
 
     private func downloadFromRepo() async {
-        guard !appState.repoOwner.isEmpty, appState.hasGithubToken else { return }
+        guard !appState.repoOwner.isEmpty, appState.hasGithubToken, appState.hasConfiguredRepo else { return }
         isDownloading = true
         defer { isDownloading = false }
         do {

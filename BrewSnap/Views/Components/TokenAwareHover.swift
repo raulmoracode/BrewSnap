@@ -17,9 +17,12 @@ struct TokenAwareHoverModifier: ViewModifier {
     }
 
     private var tooltipText: String {
-        appState.hasGithubToken
-            ? "Go to Settings to create the brewsnap-config repository"
-            : "Set up your GitHub token in Settings"
+        if !appState.hasGithubToken {
+            return "Set up your GitHub token in Settings"
+        }
+        return requiresRepository
+            ? "No brewsnap-config repository found in your GitHub account"
+            : "Go to Settings to create the brewsnap-config repository"
     }
 
     func body(content: Content) -> some View {
