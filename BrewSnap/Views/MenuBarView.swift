@@ -39,7 +39,7 @@ struct MenuBarView: View {
             .tint(Color(hex: "#FBB040"))
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
-            .handCursor()
+            .pointerCursor()
             .disabled(isSyncing)
 
             if let message {
@@ -58,7 +58,7 @@ struct MenuBarView: View {
             .buttonStyle(.bordered)
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
-            .handCursor()
+            .pointerCursor()
 
             Button {
                 mainWindowAction(requestTab: .settings)
@@ -69,7 +69,7 @@ struct MenuBarView: View {
             .buttonStyle(.bordered)
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
-            .handCursor()
+            .pointerCursor()
 
             Divider()
 
@@ -83,7 +83,7 @@ struct MenuBarView: View {
             .tint(Color(hex: "#FF2C2C"))
             .controlSize(.regular)
             .frame(maxWidth: .infinity)
-            .handCursor()
+            .pointerCursor()
         }
         .padding(12)
         .frame(width: 220)
@@ -150,23 +150,5 @@ struct MenuBarView: View {
             messageIsError = true
             appState.syncStatus = .error(error.localizedDescription)
         }
-    }
-}
-
-private struct HandCursorModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-}
-
-private extension View {
-    func handCursor() -> some View {
-        modifier(HandCursorModifier())
     }
 }

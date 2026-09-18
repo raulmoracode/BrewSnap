@@ -2,7 +2,6 @@
 // BrewSnap — Package row (name + version).
 
 import SwiftUI
-import AppKit
 
 struct PackageRow: View {
     let name: String
@@ -30,7 +29,7 @@ struct PackageRow: View {
                 }
                 .buttonStyle(.plain)
                 .help(homepage)
-                .handCursor()
+                .pointerCursor()
             }
             Text(version).font(.caption.monospaced()).foregroundStyle(Color(hex: "#FBB040"))
                 .padding(.horizontal, 6).padding(.vertical, 2)
@@ -44,23 +43,5 @@ struct CaskRow: View {
     let cask: BrewCask
     var body: some View {
         PackageRow(name: cask.name, version: cask.version, tap: cask.tap, homepage: cask.homepage)
-    }
-}
-
-private struct HandCursorModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-}
-
-private extension View {
-    func handCursor() -> some View {
-        modifier(HandCursorModifier())
     }
 }

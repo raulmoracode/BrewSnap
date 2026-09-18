@@ -72,7 +72,7 @@ struct MainView: View {
                     if let url = URL(string: "https://raulmoracode.com/links") {
                         Link("raulmoracode", destination: url)
                             .font(.caption2.weight(.semibold))
-                            .handCursor()
+                            .pointerCursor()
                     }
                     Spacer()
                 }
@@ -162,25 +162,5 @@ private final class WindowObservingView: NSView {
         guard let window else { return }
         window.identifier = NSUserInterfaceItemIdentifier("BrewSnapMain")
         onResolve?(window)
-    }
-}
-
-// MARK: - Hand Cursor
-
-private struct HandCursorModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content.onHover { hovering in
-            if hovering {
-                NSCursor.pointingHand.push()
-            } else {
-                NSCursor.pop()
-            }
-        }
-    }
-}
-
-private extension View {
-    func handCursor() -> some View {
-        modifier(HandCursorModifier())
     }
 }
