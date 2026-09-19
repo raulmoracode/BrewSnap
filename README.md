@@ -356,6 +356,17 @@ A GitHub Actions workflow in this repo (triggered by a release) that:
 
 ## Build and Distribution
 
+### Install from a GitHub release
+
+Download `BrewSnap.dmg` and `install.sh` from the same GitHub release, then run these commands from the directory containing both files:
+
+```bash
+chmod +x install.sh
+./install.sh BrewSnap.dmg
+```
+
+The script mounts the DMG, installs `BrewSnap.app` in `/Applications`, removes the quarantine attribute when possible, unmounts the DMG, and launches BrewSnap.
+
 ```bash
 # Development
 open BrewSnap.xcodeproj
