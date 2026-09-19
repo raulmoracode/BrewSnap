@@ -91,7 +91,11 @@ struct ImportView: View {
                 .tint(Color(hex: "#1D3557"))
                 .controlSize(.large)
                 .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty || !appState.hasConfiguredRepo || !appState.hasGitInstalled || appState.isCheckingRepo || appState.isCheckingGit)
-                .tokenAwareHover(requiresRepository: true, requiresGit: true)
+                .tokenAwareHover(
+                    requiresRepository: true,
+                    requiresGit: true,
+                    gitTooltipText: "Install Git to use Import"
+                )
             }
 
             if let msg = importMessage, importIsError {
