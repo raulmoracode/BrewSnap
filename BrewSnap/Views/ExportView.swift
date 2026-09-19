@@ -100,8 +100,12 @@ struct ExportView: View {
             .buttonStyle(.borderedProminent)
             .tint(Color(hex: "#1D3557"))
             .controlSize(.large)
-            .disabled(appState.snapshot == nil || appState.snapshot?.isComplete == false || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || !appState.hasGithubToken || !appState.hasConfiguredRepo || appState.isCheckingRepo)
-            .tokenAwareHover(requiresRepository: true)
+            .disabled(appState.snapshot == nil || appState.snapshot?.isComplete == false || (appState.snapshot?.formulae.isEmpty == true && appState.snapshot?.casks.isEmpty == true) || isUploading || !appState.hasGithubToken || !appState.hasConfiguredRepo || !appState.hasGitInstalled || appState.isCheckingRepo || appState.isCheckingGit)
+            .tokenAwareHover(
+                requiresRepository: true,
+                requiresGit: true,
+                gitTooltipText: "Install Git to use Export"
+            )
 
             if let msg = uploadMessage, uploadIsError {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -169,6 +173,7 @@ struct ExportView: View {
             .animation(.easeOut(duration: 0.2), value: uploadMessage)
         }
         .task {
+            await appState.checkGitInstallation()
             await appState.checkConfiguredRepo()
             if appState.snapshot == nil { await createSnapshot() }
         }

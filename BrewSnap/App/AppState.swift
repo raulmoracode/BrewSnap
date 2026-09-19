@@ -16,6 +16,8 @@ final class AppState {
     var syncStatus: SyncStatus = .idle
     var hasConfiguredRepo = false
     var isCheckingRepo = false
+    var hasGitInstalled = false
+    var isCheckingGit = false
     var selectedProfile: BrewProfile = .default
     var profiles: [BrewProfile] = [.default, .work, .personal]
 
@@ -81,6 +83,13 @@ final class AppState {
         } catch {
             hasConfiguredRepo = false
         }
+    }
+
+    /// Verifies that Git is available before enabling repository actions.
+    func checkGitInstallation() async {
+        isCheckingGit = true
+        defer { isCheckingGit = false }
+        hasGitInstalled = await ShellExecutor.isGitInstalled()
     }
 
     var repoName: String {

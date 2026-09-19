@@ -26,6 +26,14 @@ struct ShellResult: Sendable {
 
 /// Lightweight wrapper around Foundation.Process for running brew/git commands.
 enum ShellExecutor {
+    /// Returns whether a usable Git executable is available on this Mac.
+    static func isGitInstalled() async -> Bool {
+        guard let result = try? await run("/usr/bin/which", args: ["git"]) else {
+            return false
+        }
+        return result.isSuccess && !result.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     /// Resolves the brew binary without depending on PATH (critical with sandbox)
     static func brewExecutable() -> String {
         let candidates = [

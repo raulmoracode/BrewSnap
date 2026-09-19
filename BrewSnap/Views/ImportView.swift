@@ -90,8 +90,12 @@ struct ImportView: View {
                 .buttonStyle(.borderedProminent)
                 .tint(Color(hex: "#1D3557"))
                 .controlSize(.large)
-                .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty || !appState.hasConfiguredRepo || appState.isCheckingRepo)
-                .tokenAwareHover(requiresRepository: true)
+                .disabled(isDownloading || isRestoring || !appState.hasGithubToken || appState.repoOwner.isEmpty || !appState.hasConfiguredRepo || !appState.hasGitInstalled || appState.isCheckingRepo || appState.isCheckingGit)
+                .tokenAwareHover(
+                    requiresRepository: true,
+                    requiresGit: true,
+                    gitTooltipText: "Install Git to use Import"
+                )
             }
 
             if let msg = importMessage, importIsError {
@@ -193,6 +197,7 @@ struct ImportView: View {
             .animation(.easeOut(duration: 0.2), value: importMessage)
         }
         .task {
+            await appState.checkGitInstallation()
             await appState.checkConfiguredRepo()
         }
     }
