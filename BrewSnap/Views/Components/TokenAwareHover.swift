@@ -11,12 +11,18 @@ struct TokenAwareHoverModifier: ViewModifier {
     @Environment(AppState.self) private var appState
     @State private var isHovering = false
     var requiresRepository = false
+    var requiresGit = false
 
     private var actionIsAvailable: Bool {
-        appState.hasGithubToken && (!requiresRepository || appState.hasConfiguredRepo)
+        appState.hasGitInstalled &&
+            appState.hasGithubToken &&
+            (!requiresRepository || appState.hasConfiguredRepo)
     }
 
     private var tooltipText: String {
+        if requiresGit && !appState.hasGitInstalled {
+            return "Install Git to use Import and Export"
+        }
         if !appState.hasGithubToken {
             return "Set up your GitHub token in Settings"
         }
@@ -53,8 +59,8 @@ struct TokenAwareHoverModifier: ViewModifier {
 
 extension View {
     /// Adds GitHub token-aware hover feedback (cursor + tooltip).
-    func tokenAwareHover(requiresRepository: Bool = false) -> some View {
-        modifier(TokenAwareHoverModifier(requiresRepository: requiresRepository))
+    func tokenAwareHover(requiresRepository: Bool = false, requiresGit: Bool = false) -> some View {
+        modifier(TokenAwareHoverModifier(requiresRepository: requiresRepository, requiresGit: requiresGit))
     }
 }
 
