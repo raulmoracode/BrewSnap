@@ -86,7 +86,7 @@ showToken = false
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Settings")
-                .font(.largeTitle.bold()).tracking(-0.5)
+                .font(.title2.bold()).tracking(-0.4)
             Text("Connect BrewSnap to GitHub and control how it launches.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
