@@ -7,6 +7,7 @@ import AppKit
 struct MainView: View {
     @Environment(AppState.self) private var appState
     @State private var selectedTab: Tab = .packages
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     enum Tab: String, CaseIterable {
         case importTab = "Import"
@@ -56,7 +57,7 @@ struct MainView: View {
     }
 
     var body: some View {
-        NavigationSplitView(columnVisibility: .constant(.all)) {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
@@ -100,7 +101,7 @@ struct MainView: View {
                 .background(.thickMaterial)
             }
             .background(.thickMaterial)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
         } detail: {
             Group {
                 switch selectedTab {
