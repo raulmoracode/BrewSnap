@@ -4,6 +4,8 @@
 
 Native macOS app (SwiftUI) that exports your Homebrew state to JSON and automatically syncs it to a private GitHub repository.
 
+> **Docs:** [`AGENTS.md`](AGENTS.md) — project context and contribution conventions (branches, commits, PRs) for AI agents and humans · [`CHANGELOG.md`](CHANGELOG.md) — release history.
+
 ---
 
 ## Problem
@@ -27,31 +29,35 @@ BrewSnap is a native macOS app that:
 
 ### Stack
 - **Swift 6** / **SwiftUI** / **macOS 15+ (Sequoia)**
-- **GitHub API v3** (octokit.swift or direct URLSession) to create repos and push
+- **GitHub REST API v3** via direct `URLSession` (no external dependencies) to create repos and commit snapshots
 - **Keychain** to securely store the GitHub token
-- **Process** to run `brew` commands internally
-- **Combine** / **@Observable** for data flow
+- **Process** (`ShellExecutor`) to run `brew`/`git` commands internally
+- **@Observable** (Observation framework) for data flow — no third-party dependencies
 
 ### Project Structure
 
 ```
 BrewSnap/
 ├── App/
-│   ├── BrewSnapApp.swift           # Entry point, menu bar + window
-│   ├── AppState.swift              # Global observable state
+│   ├── BrewSnapApp.swift           # Entry point (window + menu bar + settings)
+│   └── AppState.swift              # Global observable state
 ├── Views/
-│   ├── MainView.swift              # Main window with tabs
+│   ├── MainView.swift              # Sidebar navigation
 │   ├── MenuBarView.swift           # Menu bar extra (icon + quick actions)
-│   ├── ExportView.swift            # Export / create snapshot view
+│   ├── ExportView.swift            # Export / upload snapshot view
 │   ├── ImportView.swift            # Import view (local or GitHub)
 │   ├── PackagesView.swift          # Packages view (All / Formulae / Casks)
-│   ├── SyncView.swift              # GitHub sync status
 │   ├── RepositoryView.swift        # Public repo links
+│   ├── ProfilesView.swift          # Profile management
 │   ├── SettingsView.swift          # Settings (token, repo, etc.)
+│   ├── GeneralView.swift           # App info (bundle, version, repos)
 │   └── Components/
 │       ├── PackageRow.swift        # Package row with name + version
 │       ├── StatusBadge.swift       # Status badge (synced, out of sync, etc.)
-│       └── DiffView.swift          # Diff view between snapshots
+│       ├── DiffView.swift          # Diff view between snapshots
+│       ├── HookSidebar.swift       # Animated sidebar with rail
+│       ├── TokenAwareHover.swift   # Cursor + tooltip for GitHub actions
+│       └── PointerCursor.swift     # Pointing-hand cursor helper
 ├── Models/
 │   ├── BrewSnapshot.swift          # Main JSON model
 │   ├── BrewFormula.swift           # Formula model
@@ -60,21 +66,20 @@ BrewSnap/
 │   ├── BrewService.swift           # Service model
 │   └── BrewProfile.swift           # Profile model
 ├── Services/
-│   ├── HomebrewService.swift       # Brew CLI interface (scan, install, etc.)
+│   ├── HomebrewService.swift       # Brew CLI interface (scan, restore)
 │   ├── GitHubService.swift         # GitHub API: create repo, commit, push
 │   ├── SnapshotService.swift       # JSON snapshot generation and reading
 │   ├── DiffService.swift           # Comparison between two snapshots
 │   └── KeychainService.swift       # Secure token storage
 ├── Utilities/
 │   ├── ShellExecutor.swift         # Wrapper for Process (run brew/git)
-│   ├── Color+Hex.swift             # Brand colors centralized in Assets
+│   ├── VersionHelper.swift         # Brew version parsing
 │   ├── JSONEncoder+Pretty.swift    # Pretty JSON encoder
-│   └── VersionHelper.swift         # Brew version parsing
+│   ├── Color+Hex.swift             # Hex → Color helper (#FBB040, #1D3557)
+│   └── Pressable.swift             # Press-down feedback for plain controls
 └── Resources/
     └── Assets.xcassets/
-        ├── AccentColor.colorset/   # BrewOrange #FBB040
-        ├── BrewNavy.colorset/      # BrewNavy #1D3557
-        ├── BrewRed.colorset/       # BrewRed #FF2C2C
+        ├── AccentColor.colorset/   # Accent color (#FBB040)
         └── AppIcon.appiconset/
 ```
 
@@ -137,6 +142,8 @@ BrewSnap/
 ---
 
 ## Features
+
+> **Status:** Phase 1 (MVP) is implemented and tagged `0.1.0` — see [`CHANGELOG.md`](CHANGELOG.md). Phase 2 is partly done (Import is implemented; Diff is a preview). Phase 3 is planned.
 
 ### Phase 1 — MVP
 
@@ -320,7 +327,7 @@ Each "sync" is a `PUT /contents/{path}` that creates an automatic commit.
 - **Name**: BrewSnap
 - **Tagline**: "Your Homebrew environment, synced and protected"
 - **Icon**: A faucet with a circular arrow → represents "snap" of the state
-- **Colors**: Brew orange (#FBB040) + dark blue (#1D3557) — centralized in `Assets.xcassets` (`AccentColor`, `BrewNavy`, `BrewRed` #FF2C2C) and `Utilities/Color+Hex.swift`
+- **Colors**: Brew orange (#FBB040) + navy (#1D3557) + red (#FF2C2C, for destructive actions) — `AccentColor` lives in `Assets.xcassets`; the other brand hexes are applied via `Utilities/Color+Hex.swift` (`Color(hex:)`)
 - **Bundle ID**: `com.raulmorasanchez.BrewSnap`
 
 ---
