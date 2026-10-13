@@ -154,6 +154,9 @@ Before / after for any UI change (omit if not applicable).
 
 ### Rules
 - **One concern per PR.** Keep PRs small and focused.
+- **Never merge a red PR.** A PR may only be merged once **every** CI check passes. If any test
+  or workflow fails, the PR **must not be merged under any circumstances** until all checks are
+  green. Never bypass, skip or force a merge over failing tests.
 - **Never commit secrets** (GitHub token, credentials). `brewsnap.json` and `*.json.bak` are gitignored.
 
 ---
