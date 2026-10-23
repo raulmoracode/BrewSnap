@@ -61,7 +61,7 @@ open BrewSnap.xcodeproj      # then Cmd+R
 | `BrewSnap/Views/*` | `Import`, `Export`, `Packages`, `Settings`, `General`, `Repository`, `MenuBar`. |
 | `BrewSnap/Views/Components/` | Reusable UI: `PackageRow`, `StatusBadge`, `DiffView`, `HookSidebar`, `TokenAwareHover`, … |
 | `BrewSnap/Resources/Assets.xcassets/` | Colors and app icon. |
-| `.agents/skills/good-practices/` | The Swift style checklist this project follows. |
+| `.opencode/opencode.json` | Project config: loads the skills catalog the agents follow. |
 
 **Common tasks → files**
 - New screen → `Views/`, register it in `MainView.swift` tabs.
@@ -90,7 +90,8 @@ open BrewSnap.xcodeproj      # then Cmd+R
 
 ## 5. Coding conventions
 
-Follow `.agents/skills/good-practices/SKILL.md` (the full checklist). Highlights:
+Follow the skills declared in `.opencode/opencode.json` — the catalog at
+`https://raulmoracode.github.io/raulmoracode-skills/`, loaded by OpenCode. Highlights:
 
 - One type per file; the file name matches the main type.
 - Group long files with `// MARK: -` sections; order: properties → init → public → private.
@@ -148,7 +149,7 @@ Before / after for any UI change (omit if not applicable).
 
 ## Checklist
 - [ ] Builds locally (`xcodebuild ... build`)
-- [ ] Follows `good-practices` (no force unwrap, naming, structure)
+- [ ] Follows the `.opencode` skills (no force unwrap, naming, structure)
 - [ ] No secrets committed
 ```
 
