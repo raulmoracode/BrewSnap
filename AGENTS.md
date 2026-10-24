@@ -90,8 +90,11 @@ open BrewSnap.xcodeproj      # then Cmd+R
 
 ## 5. Coding conventions
 
-Follow the skills declared in `.opencode/opencode.json` — the catalog at
-`https://raulmoracode.github.io/raulmoracode-skills/`, loaded by OpenCode. Highlights:
+**Follow the skills catalog loaded from `.opencode/opencode.json`** — it points to
+`https://raulmoracode.github.io/raulmoracode-skills/` (the raulmoracode-skills catalog).
+OpenCode loads this automatically; all skills declared there are active.
+
+Highlights from the catalog:
 
 - One type per file; the file name matches the main type.
 - Group long files with `// MARK: -` sections; order: properties → init → public → private.
@@ -103,62 +106,23 @@ Follow the skills declared in `.opencode/opencode.json` — the catalog at
 
 ---
 
-## 6. Git, branch & PR conventions — **all in English** ⚠️
+## 6. Git workflow
 
-Every artifact below **must be written in English**: branch names, commit messages,
-PR titles, PR descriptions, and code identifiers.
+**All git operations (issues, branches, commits, pull requests) are governed by the `git-workflow` skill.**
+That skill owns the full flow: issue → branch → implementation → verification → pull request,
+with the 29-label policy. It never merges — merges go to `git-merge`.
 
-### Branch names
-Format: `<type>/<short-kebab-case-description>`
+Key points:
+- **Every committed change goes through the full flow.** No direct commits to `main`.
+- **Branch format:** `<type>/<issue-number>-<slug>` (e.g., `feat/123-menu-bar-sync`).
+- **Commit format:** Conventional Commits — `<type>(<scope>): <summary>` (English, lowercase, no period).
+- **PR title:** same as commit format; body includes `Closes #N`.
+- **Labels:** 29-label policy per `git-workflow` (type, area, risk, marks).
+- **Never merge a red PR.** All CI checks must pass.
+- **No secrets in commits.** `brewsnap.json` and `*.json.bak` are gitignored.
 
-Allowed types: `feat`, `fix`, `refactor`, `docs`, `chore`, `style`, `perf`, `ci`, `test`.
-
-```
-feat/menu-bar-sync
-fix/sidebar-width
-docs/changelog-and-agents-md
-refactor/dedupe-cursor-helper
-```
-
-### Commits — Conventional Commits
-Format: `<type>(<optional scope>): <imperative summary>` (English, lowercase, no trailing period).
-
-```
-feat(export): add upload-to-repo button
-fix(sidebar): keep column width on resize
-docs: add changelog and AGENTS.md
-```
-
-### Pull requests
-- **Title:** same format as a commit message, in English.
-  e.g. `feat(import): validate repository before download`
-- **Description:** English, using this template:
-
-```markdown
-## Summary
-What this PR does and why, in 1–3 sentences.
-
-## Changes
-- Bullet list of the concrete changes.
-
-## Testing
-How it was verified (manual steps, screenshots, edge cases).
-
-## Screenshots
-Before / after for any UI change (omit if not applicable).
-
-## Checklist
-- [ ] Builds locally (`xcodebuild ... build`)
-- [ ] Follows the `.opencode` skills (no force unwrap, naming, structure)
-- [ ] No secrets committed
-```
-
-### Rules
-- **One concern per PR.** Keep PRs small and focused.
-- **Never merge a red PR.** A PR may only be merged once **every** CI check passes. If any test
-  or workflow fails, the PR **must not be merged under any circumstances** until all checks are
-  green. Never bypass, skip or force a merge over failing tests.
-- **Never commit secrets** (GitHub token, credentials). `brewsnap.json` and `*.json.bak` are gitignored.
+For single-stage asks (issue only, branch only, PR only) use `git-issues`, `git-branch`, `git-pr` explicitly.
+For read-only work, no git skill is needed.
 
 ---
 
@@ -168,3 +132,4 @@ Before / after for any UI change (omit if not applicable).
 - Commit the GitHub token or any secret.
 - Edit `project.pbxproj` to add source files (the synchronized group handles it).
 - Rename or move files without a clear reason.
+- Bypass the `git-workflow` flow for any change that will be committed.
